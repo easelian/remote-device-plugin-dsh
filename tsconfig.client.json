@@ -1,0 +1,12 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "moduleDetection": "legacy",
+    "lib": ["ES2022", "DOM"],
+    "types": ["react"]
+  },
+  "include": ["src/client.ts", "src/client-host.d.ts"],
+  "exclude": ["node_modules"]
+}

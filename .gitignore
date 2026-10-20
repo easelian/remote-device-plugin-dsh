@@ -6,3 +6,4 @@ coverage/
 .env
 .env.*
 releases/*.tmp
+*.tsbuildinfo

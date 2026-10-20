@@ -159,10 +159,10 @@ restate every field you keep.
 | `confirmMutations` | `true` | Legacy boolean kept for older profiles. `false` maps to `allow-all` only when `permissionMode` is not set. |
 | `RDH_OAUTH_PORT` | `3335` | Preferred loopback callback port. `off` or `0` lets `mcp-remote` derive a stable port. If the port is busy, this run falls back to the derived port. |
 | `RDH_MCP_URL` | `https://mcp.xdistribute.site/mcp` | Override the endpoint, for example for a self-hosted Hub. |
-| `RDH_DIRECT_ORIGIN` | `https://xdistribute.site:8090` | Server-side OAuth and `/mcp` origin used when the public proxy route is unreliable. Set `off` to use the public origin for those calls too. The code default is `DIRECT_HOST:DIRECT_PORT` in [bin/config.mjs](bin/config.mjs); edit `DIRECT_PORT` there to change it in source. |
+| `RDH_DIRECT_ORIGIN` | `https://xdistribute.site:8090` | Server-side OAuth and `/mcp` origin used when the public proxy route is unreliable. Set `off` to use the public origin for those calls too. The code default is `DIRECT_HOST:DIRECT_PORT` in [src/bin/config.mts](src/bin/config.mts); edit `DIRECT_PORT` there to change it in source. |
 | `RDH_PUBLIC_ORIGIN` | `https://mcp.xdistribute.site` | Public origin whose OAuth paths and `/mcp` are rewritten to `RDH_DIRECT_ORIGIN`. |
 
-The direct origin is a single constant pair in [bin/config.mjs](bin/config.mjs):
+The direct origin is a single constant pair in [src/bin/config.mts](src/bin/config.mts):
 
 ```js
 export const DIRECT_HOST = 'https://xdistribute.site'
@@ -256,14 +256,21 @@ each user must configure.
 ## Development
 
 ```bash
-npm install
-npm test
-npm run validate
+npm ci
+npm run check
+npm run pack:check
 ```
 
-The implementation is plain ESM with no build step. Tests cover the launcher
-argument/port logic, the skill provider, the approval decisions, and package
-metadata. CI runs the same commands on Node 22.
+Edit TypeScript under `src/`. `npm run build` emits the existing `index.js`,
+`client.js`, `bin/*.mjs`, and `scripts/*.mjs` entrypoints. Keep those generated
+files in version control for Git distribution; CI checks that they match the
+source. The browser entry uses the DSH module loader and the host-provided React.
+
+Both compiler configurations enable `strict`, `noUncheckedIndexedAccess`, and
+`exactOptionalPropertyTypes`. The npm package contains precompiled ESM and
+assets; TypeScript and type declarations are development dependencies. Consumers
+do not need a TypeScript runtime. Tests exercise approval modes, settings
+updates, OAuth routing/fallback, the skill provider, and launcher behavior.
 
 ## License
 

@@ -61,7 +61,11 @@
   },
   "devDependencies": {
     "@deepseek-ai/dsh-plugin-market-index": "0.2.1-rc.2",
-    "semver": "^7.8.5"
+    "semver": "^7.8.5",
+    "typescript": "7.0.2",
+    "@types/node": "22.20.5",
+    "@types/semver": "7.7.1",
+    "@types/react": "19.2.14"
   },
   "scripts": {
     "test": "node --test tests/*.test.mjs",
@@ -69,7 +73,10 @@
     "market": "node scripts/market-index.mjs",
     "pack:check": "npm pack --dry-run",
     "prepublishOnly": "npm run check",
-    "check": "npm run validate && npm test"
+    "check": "npm run build && npm run validate && npm test",
+    "build": "tsc -p tsconfig.json && tsc -p tsconfig.client.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.client.json --noEmit",
+    "prepack": "npm run build"
   },
   "dsh": {
     "bundle": {

@@ -46,7 +46,7 @@ endpoint, and MCP endpoint. Only the browser-facing `/authorize` URL stays on
 the public origin.
 
 The direct origin is built from two constants in
-[`bin/config.mjs`](../bin/config.mjs):
+[`src/bin/config.mts`](../src/bin/config.mts):
 
 ```js
 export const DIRECT_HOST = 'https://xdistribute.site'
@@ -138,6 +138,8 @@ apply through HMR.
 ## Versioning
 
 `package.json` declares `engines.dsh >= 0.2.0`. The plugin manager rejects an
-install when the running DSH does not satisfy that requirement. The package has
-one runtime dependency (`mcp-remote`) and no build step, so installation does
-not run project build scripts.
+install when the running DSH does not satisfy that requirement. The runtime dependencies are `mcp-remote` and `@deepseek-ai/schemastery`.
+TypeScript sources under `src/` compile to the existing ESM entrypoints, which
+are committed for Git distribution. npm consumers receive those precompiled
+files; the compiler and React/Node type declarations are development-only.
+The package declares no `install`, `postinstall`, or `prepare` hook.

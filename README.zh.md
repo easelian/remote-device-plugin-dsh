@@ -152,10 +152,10 @@ list_searches, get_search_results, read_process, list_processes
 | `confirmMutations` | `true` | 兼容旧 profile 的布尔值。只有未设置 `permissionMode` 时，`false` 才映射为 `allow-all`。 |
 | `RDH_OAUTH_PORT` | `3335` | 首选的 loopback 回调端口。`off` 或 `0` 表示让 `mcp-remote` 自行推导端口。端口被占用时，本次运行会退回推导端口。 |
 | `RDH_MCP_URL` | `https://mcp.xdistribute.site/mcp` | 覆盖 endpoint，例如自建 Hub。 |
-| `RDH_DIRECT_ORIGIN` | `https://xdistribute.site:8090` | 当公网代理路由不稳定时，服务端 OAuth 和 `/mcp` 使用的直连 origin。设为 `off` 则这些请求也走公网 origin。代码默认值来自 [bin/config.mjs](bin/config.mjs) 的 `DIRECT_HOST:DIRECT_PORT`；改 `DIRECT_PORT` 即可改源码默认值。 |
+| `RDH_DIRECT_ORIGIN` | `https://xdistribute.site:8090` | 当公网代理路由不稳定时，服务端 OAuth 和 `/mcp` 使用的直连 origin。设为 `off` 则这些请求也走公网 origin。代码默认值来自 [src/bin/config.mts](src/bin/config.mts) 的 `DIRECT_HOST:DIRECT_PORT`；改 `DIRECT_PORT` 即可改源码默认值。 |
 | `RDH_PUBLIC_ORIGIN` | `https://mcp.xdistribute.site` | 其 OAuth 路径和 `/mcp` 会被改写到 `RDH_DIRECT_ORIGIN` 的公网 origin。 |
 
-直连 origin 只由 [bin/config.mjs](bin/config.mjs) 里的两个常量决定：
+直连 origin 只由 [src/bin/config.mts](src/bin/config.mts) 里的两个常量决定：
 
 ```js
 export const DIRECT_HOST = 'https://xdistribute.site'
@@ -237,13 +237,20 @@ Host 部分（`index.js`）不导入任何 DSH 包。存在 `ctx.skills` 时注�
 ## 开发
 
 ```bash
-npm install
-npm test
-npm run validate
+npm ci
+npm run check
+npm run pack:check
 ```
 
-实现是纯 ESM，没有构建步骤。测试覆盖 launcher 参数/端口逻辑、技能提供者、
-审批决策和包元数据。CI 在 Node 22 上运行相同命令。
+在 `src/` 下修改 TypeScript 源码。`npm run build` 生成现有的 `index.js`、
+`client.js`、`bin/*.mjs` 和 `scripts/*.mjs` 入口。为支持 Git 分发，生成文件也
+保留在版本控制中，CI 会检查它们与源码是否一致；请勿直接修改生成文件。浏览器
+入口继续使用 DSH 模块加载器和宿主提供的 React。
+
+两份编译配置均启用 `strict`、`noUncheckedIndexedAccess` 和
+`exactOptionalPropertyTypes`。npm 包只携带预编译 ESM 和资源，TypeScript 及
+类型声明仅作为开发依赖，使用者无需 TypeScript 运行时。测试覆盖审批模式、
+设置更新、OAuth 路由与回退、技能提供者及 launcher 行为。
 
 ## 许可证
 

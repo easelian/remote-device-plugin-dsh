@@ -73,10 +73,17 @@ test('the bundled skill has valid frontmatter', async () => {
   }
 })
 
-test('the repository does not depend on a build step', async () => {
+test('the distribution runs precompiled ESM without install-time compilation', async () => {
   const manifest = JSON.parse(await read('../package.json'))
   assert.equal(manifest.private, undefined)
-  assert.equal(manifest.scripts.build, undefined)
+  assert.equal(typeof manifest.scripts.build, 'string')
+  assert.equal(manifest.scripts.prepare, undefined)
+  assert.equal(manifest.scripts.install, undefined)
+  assert.equal(manifest.scripts.postinstall, undefined)
+  assert.equal(manifest.dependencies.typescript, undefined)
+  assert.equal(manifest.dependencies['@types/node'], undefined)
+  assert.equal(manifest.files.some(path => /^(?:src|node_modules|tsconfig)/u.test(path)), false)
+  assert.equal(typeof (await import('../index.js')).apply, 'function')
   assert.ok(manifest.devDependencies['@deepseek-ai/dsh-plugin-market-index'])
   assert.ok(root.endsWith('/'))
 })
