@@ -38,12 +38,22 @@ whether the preferred callback port is free, and spawns the proxy with
 lets `mcp-remote` derive one, so a busy port is not fatal.
 
 The launcher also preloads [`bin/oauth-fetch.mjs`](../bin/oauth-fetch.mjs) with
-`node --import`. The Hub's public Cloudflare route serves `/mcp` and
-`/authorize`, but its `/.well-known/*` and `/token` routes can time out. The
-preload rewrites only those server-side OAuth calls to
-`RDH_DIRECT_ORIGIN` (default `https://xdistribute.site:8090`), which serves the
-same authorization-server metadata and token endpoint. The browser-facing
-authorization URL and the MCP endpoint are never rewritten. Set
+`node --import`. The Hub's public Cloudflare route serves the browser
+authorization page, but its `/.well-known/*`, `/token`, and `/mcp` routes can
+time out. The preload rewrites those server-side OAuth calls and `/mcp` to
+`RDH_DIRECT_ORIGIN`, which serves the same authorization-server metadata, token
+endpoint, and MCP endpoint. Only the browser-facing `/authorize` URL stays on
+the public origin.
+
+The direct origin is built from two constants in
+[`bin/config.mjs`](../bin/config.mjs):
+
+```js
+export const DIRECT_HOST = 'https://xdistribute.site'
+export const DIRECT_PORT = 8090
+```
+
+Change `DIRECT_PORT` in source, or set `RDH_DIRECT_ORIGIN` at runtime. Set
 `RDH_DIRECT_ORIGIN=off` to disable the fallback for a deployment whose public
 route is healthy.
 

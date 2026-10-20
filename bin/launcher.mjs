@@ -14,8 +14,8 @@ import { createRequire } from 'node:module'
 import net from 'node:net'
 import { fileURLToPath } from 'node:url'
 
-const DEFAULT_ENDPOINT = 'https://mcp.xdistribute.site/mcp'
-const DEFAULT_OAUTH_PORT = 3335
+import { DEFAULT_ENDPOINT, DEFAULT_OAUTH_PORT } from './config.mjs'
+
 const require = createRequire(import.meta.url)
 
 /** Resolve the installed mcp-remote proxy entry. */

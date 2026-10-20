@@ -30,6 +30,7 @@ const required = [
   'index.js',
   'bin/launcher.mjs',
   'bin/oauth-fetch.mjs',
+  'bin/config.mjs',
   'locale/en.json',
   'locale/zh.json',
   'assets/icon.png',

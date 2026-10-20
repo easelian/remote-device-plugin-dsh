@@ -19,6 +19,7 @@ test('the package declares a DSH bundle and its runtime files', async () => {
     'index.js',
     'bin/launcher.mjs',
     'bin/oauth-fetch.mjs',
+    'bin/config.mjs',
     'cordis.patch.yml',
     'locale/en.json',
     'locale/zh.json',

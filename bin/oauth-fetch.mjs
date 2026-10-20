@@ -1,18 +1,24 @@
 /**
  * Preload for the stdio OAuth bridge.
  *
- * The public Cloudflare route serves /mcp and /authorize, but its
- * /.well-known/* and /token routes are currently unreliable. The Hub's direct
- * origin on port 8090 serves the same OAuth contract. Rewrite only the
- * server-side OAuth calls to that origin; the browser authorization URL and the
- * MCP endpoint stay on the public origin.
+ * The public Cloudflare route serves the browser authorization page, but its
+ * /.well-known/*, /token, and /mcp routes can time out. The Hub's direct origin
+ * (`DIRECT_HOST:DIRECT_PORT` in `config.mjs`, overridable with
+ * RDH_DIRECT_ORIGIN) serves the same OAuth contract and MCP endpoint. Rewrite
+ * the server-side OAuth calls and /mcp to that origin; only the browser
+ * authorization URL stays on the public origin.
  *
- * This module is loaded with `node --import` before mcp-remote. It never logs
- * request headers or bodies.
+ * mcp-remote calls both global `fetch` and the `fetch` exported by `undici`, so
+ * both entry points are wrapped. This module is loaded with `node --import`
+ * before mcp-remote. It never logs request headers or bodies.
  */
 
-const PUBLIC_ORIGIN = (process.env.RDH_PUBLIC_ORIGIN ?? 'https://mcp.xdistribute.site').replace(/\/$/u, '')
-const DIRECT_ORIGIN = (process.env.RDH_DIRECT_ORIGIN ?? 'https://xdistribute.site:8090').replace(/\/$/u, '')
+import { createRequire } from 'node:module'
+
+import { DEFAULT_DIRECT_ORIGIN, PUBLIC_ORIGIN as DEFAULT_PUBLIC_ORIGIN } from './config.mjs'
+
+const PUBLIC_ORIGIN = (process.env.RDH_PUBLIC_ORIGIN ?? DEFAULT_PUBLIC_ORIGIN).replace(/\/$/u, '')
+const DIRECT_ORIGIN = (process.env.RDH_DIRECT_ORIGIN ?? DEFAULT_DIRECT_ORIGIN).replace(/\/$/u, '')
 const ENABLED = DIRECT_ORIGIN !== '' && DIRECT_ORIGIN.toLowerCase() !== 'off'
 
 const DIRECT_PATHS = new Set([
@@ -22,6 +28,7 @@ const DIRECT_PATHS = new Set([
   '/token/refresh',
   '/register',
   '/revoke',
+  '/mcp',
 ])
 
 function directURL(input) {
@@ -47,10 +54,11 @@ function replaceInput(input, target) {
   return new Request(target, input)
 }
 
-const baseFetch = globalThis.fetch.bind(globalThis)
+const WRAPPED = Symbol.for('rdh.oauthFetch.wrapped')
 
-if (ENABLED) {
-  globalThis.fetch = async (input, init) => {
+function wrap(baseFetch) {
+  if (baseFetch[WRAPPED] === true) return baseFetch
+  const wrapped = async (input, init) => {
     const target = directURL(input)
     if (target === undefined) return baseFetch(input, init)
     try {
@@ -65,4 +73,27 @@ if (ENABLED) {
       }
     }
   }
+  Object.defineProperty(wrapped, WRAPPED, { value: true })
+  return wrapped
+}
+
+function patchUndici(requireFrom) {
+  try {
+    const undici = requireFrom('undici')
+    if (typeof undici?.fetch === 'function') undici.fetch = wrap(undici.fetch.bind(undici))
+  } catch {
+    // A deployment without this copy of undici still uses the global wrapper.
+  }
+}
+
+if (ENABLED) {
+  globalThis.fetch = wrap(globalThis.fetch.bind(globalThis))
+
+  // mcp-remote imports `fetch as fetch2` from undici for token exchange and
+  // transport requests. The plugin's dependency tree can hold more than one
+  // undici copy, so patch the copy resolved from the proxy itself as well as
+  // the one next to this preload.
+  const proxyArg = process.argv.find((arg) => /(?:^|[\\/])mcp-remote[\\/]dist[\\/]proxy\.js$/u.test(arg))
+  if (proxyArg !== undefined) patchUndici(createRequire(proxyArg))
+  patchUndici(createRequire(import.meta.url))
 }
