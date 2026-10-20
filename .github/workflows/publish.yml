@@ -32,6 +32,8 @@ jobs:
       - run: npm ci
       - run: npm run check
       - name: Publish to npm
-        run: npm publish --provenance
+        # Add --provenance when this repository is public; npm cannot attest a
+        # private source repository.
+        run: npm publish
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

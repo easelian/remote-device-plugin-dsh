@@ -92,8 +92,10 @@ npm view dsh-remote-device-hub version
 
 [`.github/workflows/publish.yml`](../.github/workflows/publish.yml) is a manual
 `workflow_dispatch` workflow. It checks out the tag you enter, runs `npm ci` and
-`npm run check`, then publishes with provenance. Configure an `NPM_TOKEN`
-repository secret and protect the `npm` environment before using it.
+`npm run check`, then publishes. Configure an `NPM_TOKEN` repository secret and
+protect the `npm` environment before using it. Add `--provenance` to the publish
+command only when the repository is public; npm cannot attest a private source
+repository.
 
 Use a new version for every release (`npm version patch|minor|major`), commit
 the bump, tag it, and push the tag. The workflow publishes the exact tag you
