@@ -1,6 +1,6 @@
 {
   "name": "dsh-remote-device-hub",
-  "version": "0.2.3",
+  "version": "0.2.4",
   "description": "Connect authorized Linux and macOS devices to DeepSeek Harness through Remote Device Hub MCP.",
   "type": "module",
   "main": "index.js",
@@ -43,11 +43,11 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/just-one-click/remote-device-plugin-dsh.git"
+    "url": "git+https://github.com/be-one-click/remote-device-plugin-dsh.git"
   },
-  "homepage": "https://github.com/just-one-click/remote-device-plugin-dsh#readme",
+  "homepage": "https://github.com/be-one-click/remote-device-plugin-dsh#readme",
   "bugs": {
-    "url": "https://github.com/just-one-click/remote-device-plugin-dsh/issues"
+    "url": "https://github.com/be-one-click/remote-device-plugin-dsh/issues"
   },
   "engines": {
     "dsh": ">=0.2.0",

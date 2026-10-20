@@ -18,10 +18,10 @@ Best for an internal team or a closed beta.
 3. The user installs this exact spec from **Plugins**:
 
    ```text
-   git+ssh://git@github.com/just-one-click/remote-device-plugin-dsh.git
+   git+ssh://git@github.com/be-one-click/remote-device-plugin-dsh.git
    ```
 
-   `plugin_manager` records it as `github:just-one-click/remote-device-plugin-dsh`
+   `plugin_manager` records it as `github:be-one-click/remote-device-plugin-dsh`
    in the profile and `pnpm` fetches the current commit.
 
 ### Updating a private Git install
@@ -36,7 +36,7 @@ again can therefore keep the old commit. To update:
 For reproducible installs, publish a tag and use a ref:
 
 ```text
-git+ssh://git@github.com/just-one-click/remote-device-plugin-dsh.git#v0.2.3
+git+ssh://git@github.com/be-one-click/remote-device-plugin-dsh.git#v0.2.4
 ```
 
 ## 2. Public GitHub repository
@@ -47,11 +47,11 @@ Best when the source can be public and you do not want to run a registry.
 2. Users install the HTTPS spec, which needs no SSH key:
 
    ```text
-   git+https://github.com/just-one-click/remote-device-plugin-dsh.git
+   git+https://github.com/be-one-click/remote-device-plugin-dsh.git
    ```
 
    Pinning a tag is recommended:
-   `git+https://github.com/just-one-click/remote-device-plugin-dsh.git#v0.2.3`.
+   `git+https://github.com/be-one-click/remote-device-plugin-dsh.git#v0.2.4`.
 
 The repository still contains no secrets: the OAuth token is created per user
 and stored under `~/.mcp-auth/` on the user's machine.
@@ -107,7 +107,7 @@ From **Plugins**, install the package name, optionally with an exact version:
 
 ```text
 dsh-remote-device-hub
-dsh-remote-device-hub@0.2.3
+dsh-remote-device-hub@0.2.4
 ```
 
 The plugin manager resolves it through the user's configured registry, checks
@@ -146,7 +146,7 @@ The index is included in the npm package (`files` contains `market/*.json`), so
 a CDN that serves npm packages can host it without a separate site:
 
 ```text
-https://cdn.jsdelivr.net/npm/dsh-remote-device-hub@0.2.3/market/index.json
+https://cdn.jsdelivr.net/npm/dsh-remote-device-hub@0.2.4/market/index.json
 ```
 
 The version-less URL

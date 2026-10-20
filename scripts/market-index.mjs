@@ -20,7 +20,7 @@ import { rcompare } from 'semver'
 const ROOT = new URL('../', import.meta.url)
 const PACKAGE_PATH = new URL('package.json', ROOT)
 const ICON_PATH = new URL('assets/icon.png', ROOT)
-const DEFAULT_GIT_URL = 'https://github.com/just-one-click/remote-device-plugin-dsh.git'
+const DEFAULT_GIT_URL = 'https://github.com/be-one-click/remote-device-plugin-dsh.git'
 
 function parseArgs(argv) {
   const options = {}

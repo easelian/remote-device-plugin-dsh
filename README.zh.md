@@ -31,7 +31,7 @@ macOS 设备。它提供：
 2. 选择从 Git 安装 bundle，填入：
 
    ```text
-   git+ssh://git@github.com/just-one-click/remote-device-plugin-dsh.git
+   git+ssh://git@github.com/be-one-click/remote-device-plugin-dsh.git
    ```
 
 3. 保持 bundle 启用。插件管理器会把它写入当前 profile；开启 HMR 时无需重启
@@ -39,7 +39,7 @@ macOS 设备。它提供：
 
 ### 让 Agent 安装
 
-> 从 `git+ssh://git@github.com/just-one-click/remote-device-plugin-dsh.git`
+> 从 `git+ssh://git@github.com/be-one-click/remote-device-plugin-dsh.git`
 > 安装 DSH 插件。
 
 Agent 会调用 `plugin_manager` 的 `install_bundle`，`target` 传入同一个 Git
@@ -51,16 +51,16 @@ Agent 会调用 `plugin_manager` 的 `install_bundle`，`target` 传入同一个
 
 | 渠道 | 安装目标 |
 |---|---|
-| 私有 Git（SSH） | `git+ssh://git@github.com/just-one-click/remote-device-plugin-dsh.git` |
-| 公开 Git（HTTPS） | `git+https://github.com/just-one-click/remote-device-plugin-dsh.git` |
-| npm | `dsh-remote-device-hub` 或 `dsh-remote-device-hub@0.2.3` |
+| 私有 Git（SSH） | `git+ssh://git@github.com/be-one-click/remote-device-plugin-dsh.git` |
+| 公开 Git（HTTPS） | `git+https://github.com/be-one-click/remote-device-plugin-dsh.git` |
+| npm | `dsh-remote-device-hub` 或 `dsh-remote-device-hub@0.2.4` |
 | 市场索引 | 添加索引 URL 后从 Discover 安装 |
 
 npm 渠道需要先发布包（见 [docs/publishing.md](docs/publishing.md)）。市场索引由
 `npm run market` 生成；npm 发布后可直接使用：
 
 ```text
-https://cdn.jsdelivr.net/npm/dsh-remote-device-hub@0.2.3/market/index.json
+https://cdn.jsdelivr.net/npm/dsh-remote-device-hub@0.2.4/market/index.json
 ```
 
 把该 URL 添加为市场索引源，然后在 Discover 中安装 **Remote Device Hub**。
