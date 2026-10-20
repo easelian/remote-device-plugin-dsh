@@ -13,6 +13,7 @@
 
 import { readFile } from 'node:fs/promises'
 import { fileURLToPath } from 'node:url'
+import z from '@deepseek-ai/schemastery'
 
 const PLUGIN_NAME = 'dsh-remote-device-hub'
 const PROVIDER_NAME = 'dsh-remote-device-hub'
@@ -23,6 +24,15 @@ const RESOURCE_BASE = { kind: 'directory', path: fileURLToPath(SKILL_DIRECTORY) 
 const INVOCATION = { modelInvocable: true, userInvocable: true }
 const DESCRIPTION = 'Manage Linux and macOS devices enrolled with Remote Device Hub. Use for device status, bounded file reads and edits, remote commands, and Agent-managed jobs after the user identifies the intended device and task.'
 const BUNDLED_SKILL_RANK = 600
+
+/**
+ * Row configuration. Only `confirmMutations` is volatile, so DSH Settings can
+ * expose it as a form field without exposing the server namespace.
+ */
+export const Config = z.object({
+  serverName: z.string().default('remote-device-hub'),
+  confirmMutations: z.boolean().default(true).volatile(),
+})
 
 /**
  * Remote Device Hub tools that only read device or account state. Every other

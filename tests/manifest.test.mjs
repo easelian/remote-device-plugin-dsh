@@ -15,8 +15,13 @@ test('the package declares a DSH bundle and its runtime files', async () => {
   assert.equal(manifest.main, 'index.js')
   assert.equal(manifest.engines.dsh, '>=0.2.0')
   assert.ok(manifest.dependencies['mcp-remote'])
+  assert.ok(manifest.dependencies['@deepseek-ai/schemastery'])
+  assert.equal(manifest.exports['./client'], './client.js')
+  assert.equal(manifest.dsh.client.platform, 'web')
+  assert.ok(manifest.dsh.client.inject.includes('@deepseek-ai/dsh-client-ui-plugin-manager'))
   for (const path of [
     'index.js',
+    'client.js',
     'bin/launcher.mjs',
     'bin/oauth-fetch.mjs',
     'bin/config.mjs',

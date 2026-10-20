@@ -28,6 +28,7 @@ const required = [
   'package.json',
   'cordis.patch.yml',
   'index.js',
+  'client.js',
   'bin/launcher.mjs',
   'bin/oauth-fetch.mjs',
   'bin/config.mjs',
@@ -59,6 +60,11 @@ check(manifest.engines?.dsh === '>=0.2.0', 'engines.dsh must declare the support
 check(Boolean(manifest.dependencies?.['mcp-remote']), 'mcp-remote must be a runtime dependency')
 check(manifest.files?.includes('bin/*.mjs'), 'files must include the launcher and OAuth preload')
 check(manifest.files?.includes('index.js'), 'files must include the Host half')
+check(manifest.files?.includes('client.js'), 'files must include the Client half')
+check(manifest.exports?.['./client'] === './client.js', 'exports must expose ./client')
+check(manifest.dsh?.client?.platform === 'web', 'dsh.client.platform must be web')
+check(manifest.dsh?.client?.inject?.includes('@deepseek-ai/dsh-client-ui-plugin-manager'), 'dsh.client must inject the plugin manager')
+check(Boolean(manifest.dependencies?.['@deepseek-ai/schemastery']), 'schemastery must be a runtime dependency')
 check(manifest.files?.includes('skills/**'), 'files must include the skill tree')
 check(manifest.files?.includes('market/*.json'), 'files must include the market index')
 
