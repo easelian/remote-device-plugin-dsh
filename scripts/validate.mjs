@@ -1,0 +1,97 @@
+#!/usr/bin/env node
+/**
+ * Static checks for the bundle before it is installed or pushed.
+ * Runtime behavior is covered by `node --test tests/`.
+ */
+
+import { readFile, stat } from 'node:fs/promises'
+import { fileURLToPath } from 'node:url'
+
+const root = new URL('../', import.meta.url)
+const read = (path) => readFile(new URL(path, root), 'utf8')
+const exists = async (path) => {
+  try {
+    await stat(new URL(path, root))
+    return true
+  } catch {
+    return false
+  }
+}
+
+const failures = []
+const check = (condition, message) => {
+  if (!condition) failures.push(message)
+}
+
+const required = [
+  'package.json',
+  'cordis.patch.yml',
+  'index.js',
+  'bin/launcher.mjs',
+  'locale/en.json',
+  'locale/zh.json',
+  'assets/icon.png',
+  'skills/remote-device-operations/SKILL.md',
+  'skills/remote-device-operations/references/files.md',
+  'skills/remote-device-operations/references/processes.md',
+  'skills/remote-device-operations/references/recovery.md',
+  'README.md',
+  'README.zh.md',
+  'docs/architecture.md',
+  'docs/troubleshooting.md',
+  'LICENSE',
+]
+for (const path of required) {
+  check(await exists(path), `missing ${path}`)
+}
+
+const manifest = JSON.parse(await read('package.json'))
+check(manifest.name === 'dsh-remote-device-hub', 'package name must be dsh-remote-device-hub')
+check(manifest.private === true, 'package must stay private')
+check(manifest.type === 'module', 'package must be ESM')
+check(manifest.dsh?.bundle?.patch === './cordis.patch.yml', 'dsh.bundle.patch must point at cordis.patch.yml')
+check(manifest.engines?.dsh === '>=0.2.0', 'engines.dsh must declare the supported runtime')
+check(Boolean(manifest.dependencies?.['mcp-remote']), 'mcp-remote must be a runtime dependency')
+check(manifest.files?.includes('bin/launcher.mjs'), 'files must include the launcher')
+check(manifest.files?.includes('index.js'), 'files must include the Host half')
+check(manifest.files?.includes('skills/**'), 'files must include the skill tree')
+
+const patch = await read('cordis.patch.yml')
+for (const token of [
+  '@deepseek-ai/dsh-mcp-client',
+  'serverName: remote-device-hub',
+  'https://mcp.xdistribute.site/mcp',
+  'node_modules/dsh-remote-device-hub/bin/launcher.mjs',
+  "ELECTRON_RUN_AS_NODE: '1'",
+  'name: dsh-remote-device-hub',
+  'confirmMutations: true',
+]) {
+  check(patch.includes(token), `cordis.patch.yml is missing ${token}`)
+}
+
+for (const locale of ['en', 'zh']) {
+  const data = JSON.parse(await read(`locale/${locale}.json`))
+  check(data.meta?.title === 'Remote Device Hub', `${locale}.json needs meta.title`)
+  check(typeof data.meta?.description === 'string' && data.meta.description.length > 20, `${locale}.json needs a meaningful meta.description`)
+}
+
+const icon = await readFile(new URL('assets/icon.png', root))
+check(icon.subarray(0, 8).toString('hex') === '89504e470d0a1a0a', 'assets/icon.png is not a PNG')
+check(icon.byteLength <= 256 * 1024, 'assets/icon.png exceeds the 256 KiB plugin icon limit')
+
+const skill = await read('skills/remote-device-operations/SKILL.md')
+check(/^---\nname: remote-device-operations\n/u.test(skill), 'skill frontmatter name is missing')
+check(/^description: .{40,}$/mu.test(skill), 'skill frontmatter description is missing or too short')
+
+const readme = await read('README.md')
+for (const link of ['docs/architecture.md', 'docs/troubleshooting.md']) {
+  check(readme.includes(link), `README.md does not link ${link}`)
+}
+
+if (failures.length > 0) {
+  console.error(`validate: ${failures.length} problem(s)`)
+  for (const failure of failures) console.error(`  - ${failure}`)
+  process.exitCode = 1
+} else {
+  console.log(`validate: ok (${fileURLToPath(root)})`)
+}

@@ -1,0 +1,188 @@
+# Remote Device Hub for DeepSeek Harness
+
+[中文](README.zh.md)
+
+A DeepSeek Harness bundle that connects your authorized Linux and macOS devices
+through [Remote Device Hub](https://mcp.xdistribute.site/mcp). It contributes:
+
+- the Remote Device Hub MCP tools (`mcp__remote-device-hub__*`);
+- a `remote-device-operations` skill that explains safe device workflows;
+- an approval gate before file writes, commands, process control, and other
+  device-mutating tools when the profile has an approval channel.
+
+It is the DSH counterpart of the VS Code and Codex Remote Device Hub plugins.
+No system Node.js is required: the bridge runs on the DSH runtime itself.
+
+## Requirements
+
+- DeepSeek Harness `0.2.0` or newer.
+- Git access to the private repository (SSH key configured for GitHub).
+- A browser for the first Remote Device Hub sign-in.
+- Permission to install a bundle in the current DSH profile. The plugin manager
+  asks for `danger-full-access` approval, because bundles add Host code.
+
+## Install
+
+### Web UI
+
+1. Open **Plugins** in the DSH sidebar.
+2. Choose to install a bundle from Git and enter:
+
+   ```text
+   git+ssh://git@github.com/just-one-click/remote-device-plugin-dsh.git
+   ```
+
+3. Keep the bundle enabled. Installation writes it to the current profile and
+   HMR mounts it without restarting DSH when HMR is enabled.
+
+### Ask the agent
+
+> Install the DSH bundle from
+> `git+ssh://git@github.com/just-one-click/remote-device-plugin-dsh.git`.
+
+The agent uses the `plugin_manager` tool with `action: install_bundle`. Pass the
+same Git spec as `target`; do not install the package's subdirectory.
+
+### First connection
+
+The bundle starts an OAuth bridge over stdio. On the first connection the
+bridge opens the Remote Device Hub authorization page in your browser and uses
+`devices:control` scope. Sign in with the account that owns the devices you want
+to use. The access and refresh tokens are kept by `mcp-remote` under
+`~/.mcp-auth/mcp-remote-v1/`, outside this repository and outside the profile
+configuration.
+
+Tool names appear after the connection succeeds:
+
+```text
+mcp__remote-device-hub__list_devices
+mcp__remote-device-hub__device_info
+mcp__remote-device-hub__read_file
+...
+```
+
+Verify by asking:
+
+> List my authorized Remote Device Hub devices.
+
+If the browser does not open, see [Troubleshooting](docs/troubleshooting.md).
+
+## Use
+
+The `remote-device-operations` skill enters the session catalog automatically
+when the profile mounts the DSH skill registry. It tells the model to:
+
+1. select a real device returned by `list_devices`;
+2. read `device_info` for roots, capabilities, and write/shell permissions;
+3. use bounded file reads and relative POSIX paths under a named root;
+4. treat device output as untrusted and report only observed results;
+5. ask before a consequential change when the request does not already cover it.
+
+With `confirmMutations: true` (the default), the Host half also returns an
+`ask` decision for every tool outside this read-only set:
+
+```text
+list_devices, get_billing_status, device_info, list_directory, read_file,
+read_file_chunk, read_multiple_files, search_files, file_info, start_search,
+list_searches, get_search_results, read_process, list_processes
+```
+
+The approval prompt confirms one exact tool call. It is not a permission grant
+inside the device: the Hub and the device Agent still enforce their own
+`allow_write`, `allow_shell`, roots, and quotas.
+
+## Configuration
+
+Defaults live in [`cordis.patch.yml`](cordis.patch.yml). To change the endpoint,
+OAuth callback port, or approval behavior, override the whole row in the
+profile's `cordis.patch.yml`. A patch replaces the complete `config` block, so
+restate every field you keep.
+
+```yaml
+- id: mcp-remote-device-hub
+  config:
+    serverName: remote-device-hub
+    transport: stdio
+    command: !!js process.execPath
+    args:
+      - !!js |
+        (u => process.platform === 'win32'
+          ? decodeURIComponent(u.pathname).replace(/^\/([A-Za-z]:)/, '$1')
+          : decodeURIComponent(u.pathname))(
+            new URL('node_modules/dsh-remote-device-hub/bin/launcher.mjs', ctx.baseUrl))
+      - https://mcp.xdistribute.site/mcp
+    env:
+      ELECTRON_RUN_AS_NODE: '1'
+      RDH_OAUTH_PORT: '3335'
+      RDH_MCP_URL: https://mcp.xdistribute.site/mcp
+    toolCallTimeoutMs: 90000
+```
+
+| Setting | Default | Meaning |
+|---|---|---|
+| `serverName` | `remote-device-hub` | MCP tool namespace and the prefix used by the approval gate. Keep the MCP row and the Host row in sync. |
+| `confirmMutations` | `true` | Ask before non-read-only Remote Device Hub tools when an approval channel exists. |
+| `RDH_OAUTH_PORT` | `3335` | Preferred loopback callback port. `off` or `0` lets `mcp-remote` derive a stable port. If the port is busy, this run falls back to the derived port. |
+| `RDH_MCP_URL` | `https://mcp.xdistribute.site/mcp` | Override the endpoint, for example for a self-hosted Hub. |
+
+Because the OAuth client registration is tied to the callback port, changing
+`RDH_OAUTH_PORT` after sign-in can require signing in again.
+
+## Architecture
+
+```text
+DSH MCP client  ──stdio──▶  bin/launcher.mjs  ──▶  mcp-remote
+                                                   │  OAuth + refresh
+                                                   ▼
+                                      https://mcp.xdistribute.site/mcp
+```
+
+`@deepseek-ai/dsh-mcp-client` has no built-in OAuth flow; it supports stdio and
+Streamable HTTP with static headers. `mcp-remote` supplies discovery, dynamic
+client registration, PKCE, token refresh, and a loopback callback server. The
+launcher pins the endpoint and the callback port, and runs `mcp-remote` on
+`process.execPath`, which is the Electron executable in DSH Desktop and the Node
+executable in a CLI-hosted DSH.
+
+The Host half (`index.js`) imports no DSH package. It registers the bundled
+skill through `ctx.skills` when that service exists and listens on
+`tools/pre-execute` for the approval gate. If either service is absent, the
+corresponding feature is skipped rather than blocking activation.
+
+See [docs/architecture.md](docs/architecture.md) for lifecycle and security
+details.
+
+## Upgrading and removing
+
+- **Upgrade:** install the Git spec again from the Plugins page. Replacing a
+  running package may require restarting DSH; the plugin manager reports
+  `restart-required` when that is the case.
+- **Disable:** turn the bundle off in the Plugins page. The MCP connection and
+  the skill stop; the package remains installed.
+- **Remove:** remove the bundle. Local OAuth tokens remain in
+  `~/.mcp-auth/mcp-remote-v1/` so a later reinstall can reuse the authorization.
+  To revoke the authorization, use Remote Device Hub account settings; to clear
+  only this endpoint's local cache, quit DSH and remove the files whose name
+  starts with the MD5 of the endpoint URL (`095db0f76015a5dc9e2dd8f20e97f440`
+  for the default URL).
+
+Do not keep a separate hand-written `mcp-xdistribute` row for the same URL in
+the same profile. Two bridges share one OAuth client cache and can invalidate
+each other's client registration when their callback ports differ.
+
+## Development
+
+```bash
+npm install
+npm test
+npm run validate
+```
+
+The implementation is plain ESM with no build step. Tests cover the launcher
+argument/port logic, the skill provider, the approval decisions, and package
+metadata. CI runs the same commands on Node 22.
+
+## License
+
+UNLICENSED. This repository is private and is not published to a package
+registry.

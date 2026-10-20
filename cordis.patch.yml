@@ -1,0 +1,40 @@
+# Remote Device Hub bundle patch.
+#
+# Two rows are inserted:
+#   1. dsh-mcp-client runs the stdio OAuth bridge bundled by this package. The
+#      bridge keeps the OAuth access/refresh token rotating in ~/.mcp-auth and
+#      forwards MCP traffic to https://mcp.xdistribute.site/mcp.
+#   2. This package's Host half registers the remote-device-operations skill
+#      and asks for approval before a device-mutating MCP tool runs.
+#
+# To change the endpoint or the preferred OAuth callback port, override the
+# whole mcp-remote-device-hub config in your profile's cordis.patch.yml and
+# restate every field you keep (a patch replaces the complete config block).
+- insert:
+    - id: mcp-remote-device-hub
+      name: '@deepseek-ai/dsh-mcp-client'
+      config:
+        serverName: remote-device-hub
+        transport: stdio
+        command: !!js process.execPath
+        args:
+          # Resolve the launcher from the profile root, where pnpm links this
+          # bundle. URL decoding preserves spaces; the win32 branch removes the
+          # leading slash from a file URL pathname before it is spawned.
+          - !!js |
+            (u => process.platform === 'win32'
+              ? decodeURIComponent(u.pathname).replace(/^\/([A-Za-z]:)/, '$1')
+              : decodeURIComponent(u.pathname))(
+                new URL('node_modules/dsh-remote-device-hub/bin/launcher.mjs', ctx.baseUrl))
+          - https://mcp.xdistribute.site/mcp
+        env:
+          # The Desktop app is Electron; this makes its executable behave as a
+          # standalone Node runtime. A CLI-hosted DSH ignores the variable.
+          ELECTRON_RUN_AS_NODE: '1'
+          RDH_OAUTH_PORT: '3335'
+        toolCallTimeoutMs: 90000
+    - id: remote-device-hub
+      name: dsh-remote-device-hub
+      config:
+        serverName: remote-device-hub
+        confirmMutations: true

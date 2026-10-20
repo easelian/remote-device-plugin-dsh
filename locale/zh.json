@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "Remote Device Hub",
+    "description": "通过 Remote Device Hub MCP 连接已授权的 Linux 和 macOS 设备，提供设备操作技能，并在更改设备前请求批准。"
+  }
+}

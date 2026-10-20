@@ -1,0 +1,8 @@
+node_modules/
+.tmp/
+*.tgz
+coverage/
+.DS_Store
+.env
+.env.*
+releases/*.tmp

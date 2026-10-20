@@ -1,0 +1,57 @@
+{
+  "name": "dsh-remote-device-hub",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Connect authorized Linux and macOS devices to DeepSeek Harness through Remote Device Hub MCP.",
+  "type": "module",
+  "main": "index.js",
+  "exports": {
+    ".": "./index.js",
+    "./launcher": "./bin/launcher.mjs",
+    "./package.json": "./package.json",
+    "./locale/*.json": "./locale/*.json",
+    "./icon": "./assets/icon.png"
+  },
+  "bin": {
+    "dsh-remote-device-hub-mcp": "./bin/launcher.mjs"
+  },
+  "icon": "./assets/icon.png",
+  "files": [
+    "index.js",
+    "bin/launcher.mjs",
+    "cordis.patch.yml",
+    "locale/*.json",
+    "assets/*.png",
+    "skills/**",
+    "docs/*.md",
+    "README.md",
+    "README.zh.md",
+    "LICENSE"
+  ],
+  "keywords": [
+    "dsh",
+    "deepseek-harness",
+    "cordis",
+    "mcp",
+    "remote-device-hub",
+    "remote-development"
+  ],
+  "license": "UNLICENSED",
+  "engines": {
+    "dsh": ">=0.2.0",
+    "node": ">=22"
+  },
+  "dependencies": {
+    "mcp-remote": "^0.15.1"
+  },
+  "scripts": {
+    "test": "node --test tests/*.test.mjs",
+    "validate": "node scripts/validate.mjs",
+    "check": "npm run validate && npm test"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  }
+}
