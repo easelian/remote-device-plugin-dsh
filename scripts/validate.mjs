@@ -6,6 +6,7 @@
 
 import { readFile, stat } from 'node:fs/promises'
 import { fileURLToPath } from 'node:url'
+import { parseMarketIndex } from '@deepseek-ai/dsh-plugin-market-index'
 
 const root = new URL('../', import.meta.url)
 const read = (path) => readFile(new URL(path, root), 'utf8')
@@ -40,6 +41,7 @@ const required = [
   'docs/architecture.md',
   'docs/troubleshooting.md',
   'docs/publishing.md',
+  'market/index.json',
   'LICENSE',
 ]
 for (const path of required) {
@@ -48,7 +50,7 @@ for (const path of required) {
 
 const manifest = JSON.parse(await read('package.json'))
 check(manifest.name === 'dsh-remote-device-hub', 'package name must be dsh-remote-device-hub')
-check(manifest.private === true, 'package must stay private')
+check(manifest.private !== true, 'package must be publishable (remove private: true)')
 check(manifest.type === 'module', 'package must be ESM')
 check(manifest.dsh?.bundle?.patch === './cordis.patch.yml', 'dsh.bundle.patch must point at cordis.patch.yml')
 check(manifest.engines?.dsh === '>=0.2.0', 'engines.dsh must declare the supported runtime')
@@ -56,6 +58,7 @@ check(Boolean(manifest.dependencies?.['mcp-remote']), 'mcp-remote must be a runt
 check(manifest.files?.includes('bin/launcher.mjs'), 'files must include the launcher')
 check(manifest.files?.includes('index.js'), 'files must include the Host half')
 check(manifest.files?.includes('skills/**'), 'files must include the skill tree')
+check(manifest.files?.includes('market/*.json'), 'files must include the market index')
 
 const patch = await read('cordis.patch.yml')
 for (const token of [
@@ -83,6 +86,19 @@ check(icon.byteLength <= 256 * 1024, 'assets/icon.png exceeds the 256 KiB plugin
 const skill = await read('skills/remote-device-operations/SKILL.md')
 check(/^---\nname: remote-device-operations\n/u.test(skill), 'skill frontmatter name is missing')
 check(/^description: .{40,}$/mu.test(skill), 'skill frontmatter description is missing or too short')
+
+try {
+  const market = parseMarketIndex(
+    JSON.parse(await read('market/index.json')),
+    'https://market.invalid/index.json',
+  )
+  const plugin = market.plugins.find((entry) => entry.name === manifest.name)
+  check(plugin !== undefined, 'market/index.json does not list this package')
+  check(plugin?.versions.some((version) => version.version === manifest.version), 'market/index.json does not list the current version')
+  check(plugin?.versions.every((version) => version.source.type === 'npm' || version.source.type === 'git'), 'market/index.json has an unknown source type')
+} catch (error) {
+  check(false, `market/index.json is invalid: ${error instanceof Error ? error.message : String(error)}`)
+}
 
 const readme = await read('README.md')
 for (const link of ['docs/architecture.md', 'docs/troubleshooting.md', 'docs/publishing.md']) {

@@ -68,7 +68,8 @@ test('the bundled skill has valid frontmatter', async () => {
 
 test('the repository does not depend on a build step', async () => {
   const manifest = JSON.parse(await read('../package.json'))
+  assert.equal(manifest.private, undefined)
   assert.equal(manifest.scripts.build, undefined)
-  assert.equal(manifest.devDependencies, undefined)
+  assert.ok(manifest.devDependencies['@deepseek-ai/dsh-plugin-market-index'])
   assert.ok(root.endsWith('/'))
 })

@@ -1,7 +1,8 @@
 # Publishing and distribution
 
-This repository can be distributed in four ways. Choose one primary channel;
-the plugin code and the user experience are the same.
+This repository supports all four distribution channels below. The plugin code
+and the user experience are the same; each user installs exactly one channel in
+a profile.
 
 ## 1. Private GitHub repository (current)
 
@@ -35,7 +36,7 @@ again can therefore keep the old commit. To update:
 For reproducible installs, publish a tag and use a ref:
 
 ```text
-git+ssh://git@github.com/just-one-click/remote-device-plugin-dsh.git#v0.1.0
+git+ssh://git@github.com/just-one-click/remote-device-plugin-dsh.git#v0.2.0
 ```
 
 ## 2. Public GitHub repository
@@ -50,7 +51,7 @@ Best when the source can be public and you do not want to run a registry.
    ```
 
    Pinning a tag is recommended:
-   `git+https://github.com/just-one-click/remote-device-plugin-dsh.git#v0.1.0`.
+   `git+https://github.com/just-one-click/remote-device-plugin-dsh.git#v0.2.0`.
 
 The repository still contains no secrets: the OAuth token is created per user
 and stored under `~/.mcp-auth/` on the user's machine.
@@ -59,22 +60,25 @@ and stored under `~/.mcp-auth/` on the user's machine.
 
 Best for public or organization-wide distribution without Git access.
 
-### Prepare the manifest
+### Manifest status
 
-`package.json` is currently private and unlicensed for publication. Before the
-first publish:
+The manifest is already prepared for publishing:
 
-- remove `"private": true`;
-- choose a license and set `"license"` (`UNLICENSED` is allowed for a
-  proprietary package);
-- add `"repository"`, `"homepage"`, and `"bugs"` if the package is public;
-- for a scoped name, add `"publishConfig": { "access": "public" }`;
-- keep `"dsh": { "bundle": { "patch": "./cordis.patch.yml" } }` and `files`;
-- keep `mcp-remote` as a runtime dependency.
+- `private` is not set;
+- `repository`, `homepage`, `bugs`, and `author` are present;
+- `prepublishOnly` runs `npm run check`, so a broken package cannot publish;
+- `files` includes the runtime, locales, icon, docs, skill, and market index;
+- `mcp-remote` remains a runtime dependency.
+
+The package is marked `UNLICENSED`. Publishing to the public npm registry makes
+the tarball publicly downloadable even though no open-source rights are granted.
+Choose another license only if that is the intended distribution. For a
+proprietary distribution, use a private registry instead of the public one.
 
 The unscoped name `dsh-remote-device-hub` is currently available on npm. A
 scoped name such as `@xdistribute/dsh-remote-device-hub` avoids collisions if
-the organization owns that scope.
+the organization owns that scope; add `"publishConfig": { "access": "public" }`
+and `npm publish --access public` in that case.
 
 ### Publish
 
@@ -86,9 +90,14 @@ npm publish               # add --access public for a scoped package
 npm view dsh-remote-device-hub version
 ```
 
+[`.github/workflows/publish.yml`](../.github/workflows/publish.yml) is a manual
+`workflow_dispatch` workflow. It checks out the tag you enter, runs `npm ci` and
+`npm run check`, then publishes with provenance. Configure an `NPM_TOKEN`
+repository secret and protect the `npm` environment before using it.
+
 Use a new version for every release (`npm version patch|minor|major`), commit
-the bump, tag it, and push the tag. A GitHub Actions release workflow can run
-the same commands with `NPM_TOKEN` and `npm publish --provenance`.
+the bump, tag it, and push the tag. The workflow publishes the exact tag you
+enter.
 
 ### Users install
 
@@ -96,7 +105,7 @@ From **Plugins**, install the package name, optionally with an exact version:
 
 ```text
 dsh-remote-device-hub
-dsh-remote-device-hub@0.1.0
+dsh-remote-device-hub@0.2.0
 ```
 
 The plugin manager resolves it through the user's configured registry, checks
@@ -113,77 +122,78 @@ Best for discovery in the **Discover** tab. A market index is a public HTTPS
 JSON document in format 1. It is display and install metadata only; the
 installed package manifest remains authoritative.
 
-A minimal index for this plugin:
+This repository includes a generated, validated index at
+[`market/index.json`](../market/index.json). It lists the current npm release,
+uses an inline PNG data URI for the icon, and is checked by the official
+`@deepseek-ai/dsh-plugin-market-index` parser in `npm run validate`.
 
-```json
-{
-  "format": 1,
-  "title": { "en": "Remote Device Hub", "zh": "Remote Device Hub" },
-  "description": {
-    "en": "Remote device access for DeepSeek Harness.",
-    "zh": "为 DeepSeek Harness 提供远程设备访问。"
-  },
-  "metadata": {
-    "categories": { "remote": { "title": { "en": "Remote", "zh": "远程" } } },
-    "labels": {},
-    "sortKeys": {}
-  },
-  "plugins": [
-    {
-      "name": "dsh-remote-device-hub",
-      "title": { "en": "Remote Device Hub", "zh": "Remote Device Hub" },
-      "description": {
-        "en": "Connect authorized Linux and macOS devices through MCP.",
-        "zh": "通过 MCP 连接已授权的 Linux 和 macOS 设备。"
-      },
-      "icon": "https://example.com/remote-device-hub/icon.png",
-      "author": "Hongfei Shang",
-      "homepage": "https://github.com/just-one-click/remote-device-plugin-dsh",
-      "repository": {
-        "url": "https://github.com/just-one-click/remote-device-plugin-dsh"
-      },
-      "metadata": {
-        "category": "remote",
-        "keywords": ["mcp", "remote-device", "dsh"],
-        "labels": [],
-        "sortKeys": {}
-      },
-      "versions": [
-        {
-          "version": "0.1.0",
-          "publishTimestamp": 1792464000,
-          "source": { "type": "npm" },
-          "engines": { "dsh": ">=0.2.0" }
-        }
-      ]
-    }
-  ]
-}
+### Generate or update the index
+
+```bash
+npm run market
 ```
 
-For a Git source, `source` is `{ "type": "git", "url": "https://github.com/.../repo.git", "commit": "<40-hex-sha>", "path": "" }`.
-The commit must be a lowercase 40-hex SHA, and the URL must be a canonical
-public HTTPS URL without credentials. A private repository is not usable as a
-market Git source for users who lack access, and raw private GitHub URLs cannot
-be fetched by the market reader.
+The generator reads `package.json`, preserves older versions already present in
+the output, rejects an invalid document before writing, and keeps the icon
+inside the format's 32 KiB inline limit. Run it after every version bump, before
+committing and publishing.
 
-Host the index over public HTTPS. GitHub Pages or a CDN works; a raw GitHub URL
-redirects, and the market reader refuses redirects. Add the final index URL in
-**Settings → Plugins → Discover** (or the equivalent index-source field).
+### Host the npm index
 
-`plugin_market` can only read indexes the user already configured; it cannot
-add a source. Discoverability therefore needs the user to add the index URL
-once.
+The index is included in the npm package (`files` contains `market/*.json`), so
+a CDN that serves npm packages can host it without a separate site:
+
+```text
+https://cdn.jsdelivr.net/npm/dsh-remote-device-hub@0.2.0/market/index.json
+```
+
+The version-less URL
+`https://cdn.jsdelivr.net/npm/dsh-remote-device-hub/market/index.json` follows
+the latest published version, at the cost of CDN caching. Pinning a version is
+more reproducible. GitHub Pages or another public HTTPS host also works.
+
+The market reader refuses redirects and credentials. A raw GitHub URL redirects,
+and a private GitHub repository cannot be fetched by other users' market
+readers, so use the published npm package, Pages, or a public CDN.
+
+### Optional Git index
+
+If the repository is public and you want the market to install a Git commit:
+
+```bash
+npm run market -- \
+  --source git \
+  --commit "$(git rev-parse HEAD)" \
+  --out market/index.git.json
+```
+
+The generated file lists a `git` source with that commit. Host it at a public
+HTTPS URL. The default Git URL is the repository root; override it with
+`--git-url` for a fork or mirror. A private repository cannot be used as a
+market Git source for users who lack access.
+
+The npm index and the Git index can coexist; users add one or both as index
+sources. A single plugin version has one source in an index, so do not try to
+make one version point at both npm and Git.
+
+### Users add the index
+
+Add the final index URL in **Settings → Plugins → Discover** (or the equivalent
+index-source field). `plugin_market` can only read indexes the user already
+configured; it cannot add a source. Discoverability therefore needs the user to
+add the index URL once.
 
 ## Release checklist
 
 1. Update the version in `package.json`; commit.
-2. Run `npm run check`.
-3. Verify `npm pack --dry-run` contains `index.js`, `bin/launcher.mjs`,
-   `cordis.patch.yml`, `locale/`, `assets/`, and `skills/`.
+2. Run `npm run market` so `market/index.json` lists the new version.
+3. Run `npm run check`; verify `npm pack --dry-run` contains `index.js`,
+   `bin/launcher.mjs`, `cordis.patch.yml`, `locale/`, `assets/`, `skills/`, and
+   `market/index.json`.
 4. Tag the release (`git tag -a vX.Y.Z`) and push the commit and tag.
-5. Publish to the chosen channel (GitHub spec, npm, or a market index).
-6. Install from a clean profile in the chosen channel and call
+5. Publish to npm with the manual workflow (or `npm publish`), then confirm the
+   jsDelivr index URL resolves.
+6. Install from a clean profile in each supported channel and call
    `mcp__remote-device-hub__list_devices`. Installation alone is not
    verification; the tool call is.
 7. Confirm the first-run OAuth browser flow on a machine with no

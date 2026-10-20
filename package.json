@@ -1,7 +1,6 @@
 {
   "name": "dsh-remote-device-hub",
-  "version": "0.1.0",
-  "private": true,
+  "version": "0.2.0",
   "description": "Connect authorized Linux and macOS devices to DeepSeek Harness through Remote Device Hub MCP.",
   "type": "module",
   "main": "index.js",
@@ -24,6 +23,7 @@
     "assets/*.png",
     "skills/**",
     "docs/*.md",
+    "market/*.json",
     "README.md",
     "README.zh.md",
     "LICENSE"
@@ -37,6 +37,18 @@
     "remote-development"
   ],
   "license": "UNLICENSED",
+  "author": {
+    "name": "Hongfei Shang",
+    "email": "shfwin6@gmail.com"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/just-one-click/remote-device-plugin-dsh.git"
+  },
+  "homepage": "https://github.com/just-one-click/remote-device-plugin-dsh#readme",
+  "bugs": {
+    "url": "https://github.com/just-one-click/remote-device-plugin-dsh/issues"
+  },
   "engines": {
     "dsh": ">=0.2.0",
     "node": ">=22"
@@ -44,9 +56,16 @@
   "dependencies": {
     "mcp-remote": "^0.15.1"
   },
+  "devDependencies": {
+    "@deepseek-ai/dsh-plugin-market-index": "0.2.1-rc.2",
+    "semver": "^7.8.5"
+  },
   "scripts": {
     "test": "node --test tests/*.test.mjs",
     "validate": "node scripts/validate.mjs",
+    "market": "node scripts/market-index.mjs",
+    "pack:check": "npm pack --dry-run",
+    "prepublishOnly": "npm run check",
     "check": "npm run validate && npm test"
   },
   "dsh": {

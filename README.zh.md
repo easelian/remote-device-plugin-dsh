@@ -17,8 +17,8 @@ macOS 设备。它提供：
 ## 前置条件
 
 - DeepSeek Harness `0.2.0` 或更新版本。
-- 对私有仓库的 Git 访问权限（已为 GitHub 配置 SSH key，且 `github.com`
-  已加入 `~/.ssh/known_hosts`）。
+- 能访问任意一种分发渠道：私有 Git 仓库（SSH key，且 `github.com` 已加入
+  `~/.ssh/known_hosts`）、公开 Git 仓库、npm 包，或已配置的插件市场索引。
 - 首次登录需要浏览器。
 - 允许在当前 DSH profile 安装插件。安装 bundle 会引入 Host 代码，插件管理器
   会要求 `danger-full-access` 批准。
@@ -44,6 +44,26 @@ macOS 设备。它提供：
 
 Agent 会调用 `plugin_manager` 的 `install_bundle`，`target` 传入同一个 Git
 地址。请安装仓库根包，不要指向子目录。
+
+### 其他安装渠道
+
+同一个 bundle 支持四种分发方式，在同一个 profile 中只安装其中一种即可。
+
+| 渠道 | 安装目标 |
+|---|---|
+| 私有 Git（SSH） | `git+ssh://git@github.com/just-one-click/remote-device-plugin-dsh.git` |
+| 公开 Git（HTTPS） | `git+https://github.com/just-one-click/remote-device-plugin-dsh.git` |
+| npm | `dsh-remote-device-hub` 或 `dsh-remote-device-hub@0.2.0` |
+| 市场索引 | 添加索引 URL 后从 Discover 安装 |
+
+npm 渠道需要先发布包（见 [docs/publishing.md](docs/publishing.md)）。市场索引由
+`npm run market` 生成；npm 发布后可直接使用：
+
+```text
+https://cdn.jsdelivr.net/npm/dsh-remote-device-hub@0.2.0/market/index.json
+```
+
+把该 URL 添加为市场索引源，然后在 Discover 中安装 **Remote Device Hub**。
 
 ### 首次连接
 
