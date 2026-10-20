@@ -32,10 +32,10 @@ const required = [
   'locale/en.json',
   'locale/zh.json',
   'assets/icon.png',
-  'skills/remote-device-operations/SKILL.md',
-  'skills/remote-device-operations/references/files.md',
-  'skills/remote-device-operations/references/processes.md',
-  'skills/remote-device-operations/references/recovery.md',
+  'skills/remote-device-hub/SKILL.md',
+  'skills/remote-device-hub/references/files.md',
+  'skills/remote-device-hub/references/processes.md',
+  'skills/remote-device-hub/references/recovery.md',
   'README.md',
   'README.zh.md',
   'docs/architecture.md',
@@ -83,8 +83,8 @@ const icon = await readFile(new URL('assets/icon.png', root))
 check(icon.subarray(0, 8).toString('hex') === '89504e470d0a1a0a', 'assets/icon.png is not a PNG')
 check(icon.byteLength <= 256 * 1024, 'assets/icon.png exceeds the 256 KiB plugin icon limit')
 
-const skill = await read('skills/remote-device-operations/SKILL.md')
-check(/^---\nname: remote-device-operations\n/u.test(skill), 'skill frontmatter name is missing')
+const skill = await read('skills/remote-device-hub/SKILL.md')
+check(/^---\nname: remote-device-hub\n/u.test(skill), 'skill frontmatter name is missing')
 check(/^description: .{40,}$/mu.test(skill), 'skill frontmatter description is missing or too short')
 
 try {

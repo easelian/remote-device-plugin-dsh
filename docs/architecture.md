@@ -80,7 +80,7 @@ operation through shell.
 
 The Host half uses `ctx.inject(['skills'], ...)` so a profile without the skill
 registry still activates the approval gate. The provider exposes one bundled
-skill with `resourceBase` pointing at `skills/remote-device-operations/`; the
+skill with `resourceBase` pointing at `skills/remote-device-hub/`; the
 references beside `SKILL.md` are readable as ordinary files. Discovery does not
 read the body; every load re-reads `SKILL.md`, matching the registry contract.
 

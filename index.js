@@ -2,7 +2,7 @@
  * Host half of the Remote Device Hub bundle.
  *
  * It contributes two pieces that do not depend on the MCP connection itself:
- *   - the `remote-device-operations` skill, when this profile mounts the skill
+ *   - the `remote-device-hub` skill, when this profile mounts the skill
  *     registry;
  *   - a `tools/pre-execute` gate that asks for approval before a Remote Device
  *     Hub tool can change a device, when this profile has an approval channel.
@@ -16,8 +16,8 @@ import { fileURLToPath } from 'node:url'
 
 const PLUGIN_NAME = 'dsh-remote-device-hub'
 const PROVIDER_NAME = 'dsh-remote-device-hub'
-const SKILL_NAME = 'remote-device-operations'
-const SKILL_DIRECTORY = new URL('./skills/remote-device-operations/', import.meta.url)
+const SKILL_NAME = 'remote-device-hub'
+const SKILL_DIRECTORY = new URL('./skills/remote-device-hub/', import.meta.url)
 const SKILL_PATH = fileURLToPath(new URL('./SKILL.md', SKILL_DIRECTORY))
 const RESOURCE_BASE = { kind: 'directory', path: fileURLToPath(SKILL_DIRECTORY) }
 const INVOCATION = { modelInvocable: true, userInvocable: true }

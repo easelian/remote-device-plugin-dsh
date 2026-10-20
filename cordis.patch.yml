@@ -4,7 +4,7 @@
 #   1. dsh-mcp-client runs the stdio OAuth bridge bundled by this package. The
 #      bridge keeps the OAuth access/refresh token rotating in ~/.mcp-auth and
 #      forwards MCP traffic to https://mcp.xdistribute.site/mcp.
-#   2. This package's Host half registers the remote-device-operations skill
+#   2. This package's Host half registers the remote-device-hub skill
 #      and asks for approval before a device-mutating MCP tool runs.
 #
 # To change the endpoint or the preferred OAuth callback port, override the

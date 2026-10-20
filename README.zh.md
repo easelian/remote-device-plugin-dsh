@@ -7,7 +7,7 @@
 macOS 设备。它提供：
 
 - Remote Device Hub MCP 工具（`mcp__remote-device-hub__*`）；
-- `remote-device-operations` 技能，说明安全的设备操作流程；
+- `remote-device-hub` 技能，说明安全的设备操作流程；
 - 在当前 profile 有审批通道时，对写文件、执行命令、控制进程等会更改设备的
   工具先请求批准。
 
@@ -53,14 +53,14 @@ Agent 会调用 `plugin_manager` 的 `install_bundle`，`target` 传入同一个
 |---|---|
 | 私有 Git（SSH） | `git+ssh://git@github.com/just-one-click/remote-device-plugin-dsh.git` |
 | 公开 Git（HTTPS） | `git+https://github.com/just-one-click/remote-device-plugin-dsh.git` |
-| npm | `dsh-remote-device-hub` 或 `dsh-remote-device-hub@0.2.0` |
+| npm | `dsh-remote-device-hub` 或 `dsh-remote-device-hub@0.2.1` |
 | 市场索引 | 添加索引 URL 后从 Discover 安装 |
 
 npm 渠道需要先发布包（见 [docs/publishing.md](docs/publishing.md)）。市场索引由
 `npm run market` 生成；npm 发布后可直接使用：
 
 ```text
-https://cdn.jsdelivr.net/npm/dsh-remote-device-hub@0.2.0/market/index.json
+https://cdn.jsdelivr.net/npm/dsh-remote-device-hub@0.2.1/market/index.json
 ```
 
 把该 URL 添加为市场索引源，然后在 Discover 中安装 **Remote Device Hub**。
@@ -89,7 +89,7 @@ mcp__remote-device-hub__read_file
 
 ## 使用
 
-当前 profile 挂载了 DSH 技能注册表时，`remote-device-operations` 技能会自动进入
+当前 profile 挂载了 DSH 技能注册表时，`remote-device-hub` 技能会自动进入
 会话目录。它要求模型：
 
 1. 从 `list_devices` 返回的真实设备中选择目标；

@@ -21,7 +21,7 @@ test('the package declares a DSH bundle and its runtime files', async () => {
     'cordis.patch.yml',
     'locale/en.json',
     'locale/zh.json',
-    'skills/remote-device-operations/SKILL.md',
+    'skills/remote-device-hub/SKILL.md',
     'README.md',
     'README.zh.md',
     'LICENSE',
@@ -56,13 +56,13 @@ test('the icon is a small valid PNG', async () => {
 })
 
 test('the bundled skill has valid frontmatter', async () => {
-  const body = await read('../skills/remote-device-operations/SKILL.md')
+  const body = await read('../skills/remote-device-hub/SKILL.md')
   const match = /^---\n([\s\S]*?)\n---/u.exec(body)
   assert.ok(match, 'frontmatter is present')
-  assert.match(match[1], /^name: remote-device-operations$/mu)
+  assert.match(match[1], /^name: remote-device-hub$/mu)
   assert.match(match[1], /^description: .{40,}$/mu)
   for (const reference of ['files.md', 'processes.md', 'recovery.md']) {
-    await stat(new URL(`../skills/remote-device-operations/references/${reference}`, import.meta.url))
+    await stat(new URL(`../skills/remote-device-hub/references/${reference}`, import.meta.url))
   }
 })
 

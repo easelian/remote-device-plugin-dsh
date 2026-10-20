@@ -46,12 +46,12 @@ test('registers one bundled skill provider', async () => {
   const provider = providers[0]
   assert.equal(provider.name, 'dsh-remote-device-hub')
   const [candidate] = await provider.list()
-  assert.equal(candidate.name, 'remote-device-operations')
+  assert.equal(candidate.name, 'remote-device-hub')
   assert.equal(candidate.invocation.modelInvocable, true)
   assert.match(candidate.description, /Remote Device Hub/u)
 
   const definition = await provider.get(candidate)
-  assert.equal(definition.name, 'remote-device-operations')
+  assert.equal(definition.name, 'remote-device-hub')
   assert.match(definition.content, /^# Remote Device Hub/mu)
   assert.doesNotMatch(definition.content, /^---/u)
   assert.equal(definition.resourceBase.kind, 'directory')
