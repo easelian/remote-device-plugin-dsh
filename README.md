@@ -173,6 +173,12 @@ Do not keep a separate hand-written `mcp-xdistribute` row for the same URL in
 the same profile. Two bridges share one OAuth client cache and can invalidate
 each other's client registration when their callback ports differ.
 
+## Publishing
+
+See [docs/publishing.md](docs/publishing.md) for private Git, public Git, npm,
+and plugin-market index distribution, including the release checklist and what
+each user must configure.
+
 ## Development
 
 ```bash

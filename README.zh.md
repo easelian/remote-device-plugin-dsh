@@ -162,6 +162,11 @@ Host 部分（`index.js`）不导入任何 DSH 包。存在 `ctx.skills` 时注�
 共用一份 OAuth 客户端缓存，回调端口不同时会互相使对方的 client registration
 失效。
 
+## 发布
+
+私有 Git、公开 Git、npm 和插件市场索引四种分发方式、发布检查清单以及用户需要
+准备的配置，见 [docs/publishing.md](docs/publishing.md)。
+
 ## 开发
 
 ```bash

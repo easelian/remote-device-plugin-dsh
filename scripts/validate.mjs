@@ -39,6 +39,7 @@ const required = [
   'README.zh.md',
   'docs/architecture.md',
   'docs/troubleshooting.md',
+  'docs/publishing.md',
   'LICENSE',
 ]
 for (const path of required) {
@@ -84,7 +85,7 @@ check(/^---\nname: remote-device-operations\n/u.test(skill), 'skill frontmatter 
 check(/^description: .{40,}$/mu.test(skill), 'skill frontmatter description is missing or too short')
 
 const readme = await read('README.md')
-for (const link of ['docs/architecture.md', 'docs/troubleshooting.md']) {
+for (const link of ['docs/architecture.md', 'docs/troubleshooting.md', 'docs/publishing.md']) {
   check(readme.includes(link), `README.md does not link ${link}`)
 }
 
