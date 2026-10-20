@@ -73,10 +73,18 @@ export const LOW_RISK_TOOLS = new Set([
   'stop_search',
 ])
 
+/** Read a plain or schemastery-volatile config value. */
+function configValue(value) {
+  return value !== null && typeof value === 'object' && typeof value.get === 'function'
+    ? value.get()
+    : value
+}
+
 /** Resolve the effective permission mode, including the legacy boolean. */
 export function resolvePermissionMode(config = {}) {
-  if (PERMISSION_MODES.includes(config.permissionMode)) return config.permissionMode
-  if (config.confirmMutations === false) return 'allow-all'
+  const mode = configValue(config.permissionMode)
+  if (PERMISSION_MODES.includes(mode)) return mode
+  if (configValue(config.confirmMutations) === false) return 'allow-all'
   return DEFAULT_PERMISSION_MODE
 }
 
@@ -155,7 +163,6 @@ export function apply(ctx, config = {}) {
   const serverName = typeof config.serverName === 'string' && config.serverName.length > 0
     ? config.serverName
     : 'remote-device-hub'
-  const permissionMode = resolvePermissionMode(config)
 
   const registerSkill = (scope) => {
     const skills = scope.skills ?? (typeof scope.get === 'function' ? scope.get('skills') : undefined)
@@ -168,7 +175,6 @@ export function apply(ctx, config = {}) {
     registerSkill(ctx)
   }
 
-  if (permissionMode === 'allow-all') return
   ctx.on('tools/pre-execute', async (exec, next) => {
     let approval
     try {
@@ -176,7 +182,11 @@ export function apply(ctx, config = {}) {
     } catch {
       approval = undefined
     }
-    const decision = mutationDecision(exec, { serverName, approvalAvailable: approval != null, permissionMode })
+    const decision = mutationDecision(exec, {
+      serverName,
+      approvalAvailable: approval != null,
+      permissionMode: resolvePermissionMode(config),
+    })
     return decision ?? next()
   })
 }

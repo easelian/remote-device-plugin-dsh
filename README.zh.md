@@ -53,14 +53,14 @@ Agent 会调用 `plugin_manager` 的 `install_bundle`，`target` 传入同一个
 |---|---|
 | 私有 Git（SSH） | `git+ssh://git@github.com/be-one-click/remote-device-plugin-dsh.git` |
 | 公开 Git（HTTPS） | `git+https://github.com/be-one-click/remote-device-plugin-dsh.git` |
-| npm | `dsh-remote-device-hub` 或 `dsh-remote-device-hub@0.3.0` |
+| npm | `dsh-remote-device-hub` 或 `dsh-remote-device-hub@0.3.1` |
 | 市场索引 | 添加索引 URL 后从 Discover 安装 |
 
 npm 渠道需要先发布包（见 [docs/publishing.md](docs/publishing.md)）。市场索引由
 `npm run market` 生成；npm 发布后可直接使用：
 
 ```text
-https://cdn.jsdelivr.net/npm/dsh-remote-device-hub@0.3.0/market/index.json
+https://cdn.jsdelivr.net/npm/dsh-remote-device-hub@0.3.1/market/index.json
 ```
 
 把该 URL 添加为市场索引源，然后在 Discover 中安装 **Remote Device Hub**。

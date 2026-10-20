@@ -113,9 +113,10 @@ test('the gate steps aside without an approval channel', async () => {
   assert.equal(decision, 'next')
 })
 
-test('confirmMutations false registers no gate', () => {
+test('confirmMutations false falls back to allow-all', async () => {
   const { gate } = createHarness({ confirmMutations: false })
-  assert.equal(gate, undefined)
+  assert.ok(gate)
+  assert.equal(await gate({ name: 'mcp__remote-device-hub__start_process', args: {} }, next), 'next')
 })
 
 test('mutationDecision exposes the read-only set', () => {
@@ -147,9 +148,10 @@ test('low-risk passes low-risk changes but asks for sensitive tools', async () =
   assert.ok(!LOW_RISK_TOOLS.has('start_process'))
 })
 
-test('allow-all registers no gate and accepts every tool', () => {
+test('allow-all accepts every tool', async () => {
   const { gate } = createHarness({ permissionMode: 'allow-all' })
-  assert.equal(gate, undefined)
+  assert.ok(gate)
+  assert.equal(await gate({ name: 'mcp__remote-device-hub__start_process', args: {} }, next), 'next')
   assert.equal(mutationDecision({ name: 'mcp__remote-device-hub__start_process', args: {} }, {
     permissionMode: 'allow-all', approvalAvailable: true,
   }), null)
@@ -160,4 +162,14 @@ test('the legacy confirmMutations boolean maps to a permission mode', () => {
   assert.equal(resolvePermissionMode({ confirmMutations: false }), 'allow-all')
   assert.equal(resolvePermissionMode({ confirmMutations: true }), 'read-only')
   assert.equal(resolvePermissionMode({ permissionMode: 'low-risk', confirmMutations: false }), 'low-risk')
+})
+
+test('volatile config observables are read through get()', () => {
+  const observable = value => ({ get: () => value })
+  assert.equal(resolvePermissionMode({ permissionMode: observable('allow-all') }), 'allow-all')
+  assert.equal(resolvePermissionMode({ confirmMutations: observable(false) }), 'allow-all')
+  assert.equal(resolvePermissionMode({
+    permissionMode: observable('low-risk'),
+    confirmMutations: observable(false),
+  }), 'low-risk')
 })
