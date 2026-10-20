@@ -53,14 +53,14 @@ Agent 会调用 `plugin_manager` 的 `install_bundle`，`target` 传入同一个
 |---|---|
 | 私有 Git（SSH） | `git+ssh://git@github.com/be-one-click/remote-device-plugin-dsh.git` |
 | 公开 Git（HTTPS） | `git+https://github.com/be-one-click/remote-device-plugin-dsh.git` |
-| npm | `dsh-remote-device-hub` 或 `dsh-remote-device-hub@0.3.1` |
+| npm | `dsh-remote-device-hub` 或 `dsh-remote-device-hub@0.3.2` |
 | 市场索引 | 添加索引 URL 后从 Discover 安装 |
 
 npm 渠道需要先发布包（见 [docs/publishing.md](docs/publishing.md)）。市场索引由
 `npm run market` 生成；npm 发布后可直接使用：
 
 ```text
-https://cdn.jsdelivr.net/npm/dsh-remote-device-hub@0.3.1/market/index.json
+https://cdn.jsdelivr.net/npm/dsh-remote-device-hub@0.3.2/market/index.json
 ```
 
 把该 URL 添加为市场索引源，然后在 Discover 中安装 **Remote Device Hub**。
@@ -105,7 +105,7 @@ Host 部分还实现了四种权限级别。所选级别决定哪些工具在有
 |---|---|
 | `always-ask` | 读取和所有修改前都询问。 |
 | `read-only` | 放行读取；任何修改前询问。 |
-| `low-risk` | 放行读取以及 `make_directory`、`stop_search`；写文件、移动、shell 命令和进程控制仍询问。 |
+| `low-risk` | 放行读取、创建新文件或目录（`write_file` 的 `expected_sha256` 为空）、`stop_search`；覆盖写入、移动、shell 命令和进程控制仍询问。 |
 | `allow-all` | 不再询问。 |
 
 只读集合为：

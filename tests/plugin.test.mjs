@@ -134,18 +134,27 @@ test('read-only passes reads and asks for any change', async () => {
   const { gate } = createHarness({ permissionMode: 'read-only' })
   assert.equal(await gate({ name: 'mcp__remote-device-hub__read_file', args: {} }, next), 'next')
   assert.equal((await gate({ name: 'mcp__remote-device-hub__make_directory', args: {} }, next)).kind, 'ask')
+  assert.equal((await gate({ name: 'mcp__remote-device-hub__write_file', args: { expected_sha256: '' } }, next)).kind, 'ask')
 })
 
-test('low-risk passes low-risk changes but asks for sensitive tools', async () => {
+test('low-risk allows create-only writes but asks for overwrites', async () => {
   const { gate } = createHarness({ permissionMode: 'low-risk' })
   for (const tool of ['read_file', 'make_directory', 'stop_search']) {
     assert.equal(await gate({ name: `mcp__remote-device-hub__${tool}`, args: {} }, next), 'next')
   }
-  for (const tool of ['write_file', 'start_process', 'terminate_process']) {
+  assert.equal(await gate({
+    name: 'mcp__remote-device-hub__write_file',
+    args: { expected_sha256: '' },
+  }, next), 'next')
+  assert.equal((await gate({
+    name: 'mcp__remote-device-hub__write_file',
+    args: { expected_sha256: 'a'.repeat(64) },
+  }, next)).kind, 'ask')
+  for (const tool of ['start_process', 'terminate_process']) {
     assert.equal((await gate({ name: `mcp__remote-device-hub__${tool}`, args: {} }, next)).kind, 'ask')
   }
   assert.ok(LOW_RISK_TOOLS.has('make_directory'))
-  assert.ok(!LOW_RISK_TOOLS.has('start_process'))
+  assert.ok(!LOW_RISK_TOOLS.has('write_file'))
 })
 
 test('allow-all accepts every tool', async () => {

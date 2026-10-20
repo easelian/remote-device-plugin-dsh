@@ -134,9 +134,13 @@ export function mutationDecision(exec, options = {}) {
   if (!toolName.startsWith(prefix)) return null
   const tool = toolName.slice(prefix.length)
   if (permissionMode === 'allow-all') return null
-  if (permissionMode !== 'always-ask') {
-    const allowed = permissionMode === 'low-risk' ? LOW_RISK_TOOLS : READ_ONLY_TOOLS
-    if (allowed.has(tool)) return null
+  if (permissionMode === 'read-only') {
+    if (READ_ONLY_TOOLS.has(tool)) return null
+  } else if (permissionMode === 'low-risk') {
+    if (LOW_RISK_TOOLS.has(tool)) return null
+    // A write with an empty expected hash is create-only: it cannot replace an
+    // existing file. Overwriting still requires a hash and stays gated.
+    if (tool === 'write_file' && (exec?.args?.expected_sha256 ?? '') === '') return null
   }
   if (!approvalAvailable) return null
 

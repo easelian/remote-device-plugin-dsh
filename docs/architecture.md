@@ -86,7 +86,7 @@ approval service is present. Inside the namespace, `permissionMode` decides:
 |---|---|
 | `always-ask` | nothing |
 | `read-only` | the read-only set |
-| `low-risk` | the read-only set plus `make_directory` and `stop_search` |
+| `low-risk` | the read-only set plus `make_directory`, `stop_search`, and create-only `write_file` (empty `expected_sha256`) |
 | `allow-all` | every tool; no listener is registered |
 
 Every other call returns `{ kind: 'ask', reason, displayReason }`. The tool
