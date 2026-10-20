@@ -25,12 +25,18 @@ const INVOCATION = { modelInvocable: true, userInvocable: true }
 const DESCRIPTION = 'Manage Linux and macOS devices enrolled with Remote Device Hub. Use for device status, bounded file reads and edits, remote commands, and Agent-managed jobs after the user identifies the intended device and task.'
 const BUNDLED_SKILL_RANK = 600
 
+/** Permission levels offered on the Plugins row page. */
+export const PERMISSION_MODES = ['always-ask', 'read-only', 'low-risk', 'allow-all']
+const DEFAULT_PERMISSION_MODE = 'read-only'
+
 /**
- * Row configuration. Only `confirmMutations` is volatile, so DSH Settings can
- * expose it as a form field without exposing the server namespace.
+ * Row configuration. `permissionMode` is volatile, so DSH Settings can expose
+ * it as the row's form field. `confirmMutations` is the legacy boolean kept for
+ * profiles written before the permission levels existed.
  */
 export const Config = z.object({
   serverName: z.string().default('remote-device-hub'),
+  permissionMode: z.union(PERMISSION_MODES.map((mode) => z.const(mode))).volatile(),
   confirmMutations: z.boolean().default(true).volatile(),
 })
 
@@ -55,6 +61,24 @@ export const READ_ONLY_TOOLS = new Set([
   'read_process',
   'list_processes',
 ])
+
+/**
+ * Low-risk tools: read-only calls plus operations that cannot overwrite data
+ * and are cheap to undo. Everything else, including shell execution, file
+ * writes, moves, and process termination, asks in `low-risk` mode.
+ */
+export const LOW_RISK_TOOLS = new Set([
+  ...READ_ONLY_TOOLS,
+  'make_directory',
+  'stop_search',
+])
+
+/** Resolve the effective permission mode, including the legacy boolean. */
+export function resolvePermissionMode(config = {}) {
+  if (PERMISSION_MODES.includes(config.permissionMode)) return config.permissionMode
+  if (config.confirmMutations === false) return 'allow-all'
+  return DEFAULT_PERMISSION_MODE
+}
 
 const CANDIDATE = {
   name: SKILL_NAME,
@@ -96,11 +120,16 @@ function createProvider() {
 export function mutationDecision(exec, options = {}) {
   const serverName = options.serverName ?? 'remote-device-hub'
   const approvalAvailable = options.approvalAvailable === true
+  const permissionMode = options.permissionMode ?? DEFAULT_PERMISSION_MODE
   const prefix = `mcp__${serverName}__`
   const toolName = typeof exec?.name === 'string' ? exec.name : ''
   if (!toolName.startsWith(prefix)) return null
   const tool = toolName.slice(prefix.length)
-  if (READ_ONLY_TOOLS.has(tool)) return null
+  if (permissionMode === 'allow-all') return null
+  if (permissionMode !== 'always-ask') {
+    const allowed = permissionMode === 'low-risk' ? LOW_RISK_TOOLS : READ_ONLY_TOOLS
+    if (allowed.has(tool)) return null
+  }
   if (!approvalAvailable) return null
 
   const rawDevice = exec?.args?.device_id
@@ -119,12 +148,14 @@ export function mutationDecision(exec, options = {}) {
 /**
  * Register the skill (when available) and the mutation approval gate.
  * @param ctx - Cordis context.
- * @param config - Row config: `serverName` and `confirmMutations`.
+ * @param config - Row config: `serverName`, `permissionMode`, and the legacy
+ * `confirmMutations`.
  */
 export function apply(ctx, config = {}) {
   const serverName = typeof config.serverName === 'string' && config.serverName.length > 0
     ? config.serverName
     : 'remote-device-hub'
+  const permissionMode = resolvePermissionMode(config)
 
   const registerSkill = (scope) => {
     const skills = scope.skills ?? (typeof scope.get === 'function' ? scope.get('skills') : undefined)
@@ -137,7 +168,7 @@ export function apply(ctx, config = {}) {
     registerSkill(ctx)
   }
 
-  if (config.confirmMutations === false) return
+  if (permissionMode === 'allow-all') return
   ctx.on('tools/pre-execute', async (exec, next) => {
     let approval
     try {
@@ -145,7 +176,7 @@ export function apply(ctx, config = {}) {
     } catch {
       approval = undefined
     }
-    const decision = mutationDecision(exec, { serverName, approvalAvailable: approval != null })
+    const decision = mutationDecision(exec, { serverName, approvalAvailable: approval != null, permissionMode })
     return decision ?? next()
   })
 }

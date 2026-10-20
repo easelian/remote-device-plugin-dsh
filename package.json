@@ -1,6 +1,6 @@
 {
   "name": "dsh-remote-device-hub",
-  "version": "0.2.5",
+  "version": "0.3.0",
   "description": "Connect authorized Linux and macOS devices to DeepSeek Harness through Remote Device Hub MCP.",
   "type": "module",
   "main": "index.js",
@@ -80,8 +80,7 @@
       "immediately": true,
       "inject": [
         "@deepseek-ai/dsh-client-locale",
-        "@deepseek-ai/dsh-client-ui-plugin-manager",
-        "@deepseek-ai/dsh-client-ui-primitives"
+        "@deepseek-ai/dsh-client-ui-plugin-manager"
       ]
     }
   }

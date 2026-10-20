@@ -2,12 +2,14 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 
 import {
+  LOW_RISK_TOOLS,
   READ_ONLY_TOOLS,
   apply,
   mutationDecision,
+  resolvePermissionMode,
 } from '../index.js'
 
-function createHarness({ approval = {}, confirmMutations = true, skills = true, serverName } = {}) {
+function createHarness({ approval = {}, confirmMutations = true, skills = true, serverName, permissionMode } = {}) {
   const listeners = new Map()
   const providers = []
   const ctx = {
@@ -30,6 +32,7 @@ function createHarness({ approval = {}, confirmMutations = true, skills = true, 
   }
   const config = { confirmMutations }
   if (serverName !== undefined) config.serverName = serverName
+  if (permissionMode !== undefined) config.permissionMode = permissionMode
   apply(ctx, config)
   return {
     listeners,
@@ -118,4 +121,43 @@ test('confirmMutations false registers no gate', () => {
 test('mutationDecision exposes the read-only set', () => {
   assert.ok(READ_ONLY_TOOLS.has('read_file'))
   assert.ok(!READ_ONLY_TOOLS.has('write_file'))
+})
+
+test('always-ask asks even for read-only tools', async () => {
+  const { gate } = createHarness({ permissionMode: 'always-ask' })
+  const decision = await gate({ name: 'mcp__remote-device-hub__read_file', args: {} }, next)
+  assert.equal(decision.kind, 'ask')
+})
+
+test('read-only passes reads and asks for any change', async () => {
+  const { gate } = createHarness({ permissionMode: 'read-only' })
+  assert.equal(await gate({ name: 'mcp__remote-device-hub__read_file', args: {} }, next), 'next')
+  assert.equal((await gate({ name: 'mcp__remote-device-hub__make_directory', args: {} }, next)).kind, 'ask')
+})
+
+test('low-risk passes low-risk changes but asks for sensitive tools', async () => {
+  const { gate } = createHarness({ permissionMode: 'low-risk' })
+  for (const tool of ['read_file', 'make_directory', 'stop_search']) {
+    assert.equal(await gate({ name: `mcp__remote-device-hub__${tool}`, args: {} }, next), 'next')
+  }
+  for (const tool of ['write_file', 'start_process', 'terminate_process']) {
+    assert.equal((await gate({ name: `mcp__remote-device-hub__${tool}`, args: {} }, next)).kind, 'ask')
+  }
+  assert.ok(LOW_RISK_TOOLS.has('make_directory'))
+  assert.ok(!LOW_RISK_TOOLS.has('start_process'))
+})
+
+test('allow-all registers no gate and accepts every tool', () => {
+  const { gate } = createHarness({ permissionMode: 'allow-all' })
+  assert.equal(gate, undefined)
+  assert.equal(mutationDecision({ name: 'mcp__remote-device-hub__start_process', args: {} }, {
+    permissionMode: 'allow-all', approvalAvailable: true,
+  }), null)
+})
+
+test('the legacy confirmMutations boolean maps to a permission mode', () => {
+  assert.equal(resolvePermissionMode({}), 'read-only')
+  assert.equal(resolvePermissionMode({ confirmMutations: false }), 'allow-all')
+  assert.equal(resolvePermissionMode({ confirmMutations: true }), 'read-only')
+  assert.equal(resolvePermissionMode({ permissionMode: 'low-risk', confirmMutations: false }), 'low-risk')
 })

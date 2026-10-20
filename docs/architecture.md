@@ -78,17 +78,27 @@ and strips the leading slash on Windows drive-letter paths.
 
 ## Approval gate
 
-`ctx.on('tools/pre-execute', ...)` is a waterfall. The listener returns:
+`ctx.on('tools/pre-execute', ...)` is a waterfall. The listener returns
+`next()` for tools outside the `mcp__<serverName>__` namespace and when no
+approval service is present. Inside the namespace, `permissionMode` decides:
 
-- `next()` for tools outside the `mcp__<serverName>__` namespace;
-- `next()` for the explicit read-only set;
-- `next()` when no approval service is present;
-- `{ kind: 'ask', reason, displayReason }` for every other tool.
+| Mode | Allowed without asking |
+|---|---|
+| `always-ask` | nothing |
+| `read-only` | the read-only set |
+| `low-risk` | the read-only set plus `make_directory` and `stop_search` |
+| `allow-all` | every tool; no listener is registered |
 
-The tool runtime resolves `ask` through the approval service
-(`ctx.get('approval')`); only `allowed-once` proceeds, and the decision is
-audited. The gate is deliberately conservative: a future Agent tool that is not
-added to the read-only set prompts rather than running silently.
+Every other call returns `{ kind: 'ask', reason, displayReason }`. The tool
+runtime resolves `ask` through the approval service (`ctx.get('approval')`);
+only `allowed-once` proceeds, and the decision is audited. The gate is
+deliberately conservative: a future Agent tool that is not in the selected
+allowed set prompts rather than running silently.
+
+`permissionMode` is a volatile field of the Host row's `Config`. The Plugins row
+page renders four radio options into `plugins.row.config` under the key
+`dsh-remote-device-hub#remote-device-hub`. The legacy `confirmMutations: false`
+maps to `allow-all` only when `permissionMode` is absent.
 
 This gate is defense in depth, not the authority boundary. The Hub enforces the
 account's authorization, the device Agent enforces roots and capability flags,
@@ -117,7 +127,7 @@ guidance without editing this package.
 | OAuth canceled or timed out | Handshake fails; no tools until the next connection attempt. |
 | Callback port busy | Warning; derived port used for this run. |
 | Endpoint unreachable | MCP row fails discovery; Host skill and gate still load. |
-| Approval denied or unavailable | The mutating call fails; read-only calls still work. |
+| Approval denied or unavailable | The gated call fails; calls allowed by the selected mode still work. |
 | Skill registry absent | Skill is skipped; approval gate still works. |
 | Approval service absent | Gate steps aside; no enforced prompt. |
 
