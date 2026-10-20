@@ -53,14 +53,14 @@ Agent 会调用 `plugin_manager` 的 `install_bundle`，`target` 传入同一个
 |---|---|
 | 私有 Git（SSH） | `git+ssh://git@github.com/just-one-click/remote-device-plugin-dsh.git` |
 | 公开 Git（HTTPS） | `git+https://github.com/just-one-click/remote-device-plugin-dsh.git` |
-| npm | `dsh-remote-device-hub` 或 `dsh-remote-device-hub@0.2.1` |
+| npm | `dsh-remote-device-hub` 或 `dsh-remote-device-hub@0.2.2` |
 | 市场索引 | 添加索引 URL 后从 Discover 安装 |
 
 npm 渠道需要先发布包（见 [docs/publishing.md](docs/publishing.md)）。市场索引由
 `npm run market` 生成；npm 发布后可直接使用：
 
 ```text
-https://cdn.jsdelivr.net/npm/dsh-remote-device-hub@0.2.1/market/index.json
+https://cdn.jsdelivr.net/npm/dsh-remote-device-hub@0.2.2/market/index.json
 ```
 
 把该 URL 添加为市场索引源，然后在 Discover 中安装 **Remote Device Hub**。
@@ -142,6 +142,13 @@ list_searches, get_search_results, read_process, list_processes
 | `confirmMutations` | `true` | 有审批通道时，对非只读的 Remote Device Hub 工具请求批准。 |
 | `RDH_OAUTH_PORT` | `3335` | 首选的 loopback 回调端口。`off` 或 `0` 表示让 `mcp-remote` 自行推导端口。端口被占用时，本次运行会退回推导端口。 |
 | `RDH_MCP_URL` | `https://mcp.xdistribute.site/mcp` | 覆盖 endpoint，例如自建 Hub。 |
+| `RDH_DIRECT_ORIGIN` | `https://xdistribute.site:8090` | 当公网代理路由不稳定时，服务端 OAuth 发现和令牌交换使用的直连 origin。设为 `off` 则这些请求也走公网 origin。 |
+| `RDH_PUBLIC_ORIGIN` | `https://mcp.xdistribute.site` | 其 OAuth 路径会被改写到 `RDH_DIRECT_ORIGIN` 的公网 origin。 |
+
+launcher 会预加载一个小的 fetch 改写，只作用于 OAuth 服务端路径
+（`/.well-known/*`、`/token`、`/register`、`/revoke`），不会改写浏览器使用的
+`/authorize`，也不会改写 `/mcp`。这与当前 Hub 部署一致：公网路由承载浏览器和
+MCP 流量，8090 直连 origin 承载 OAuth 交换。
 
 OAuth 客户端注册与回调端口绑定，登录后再修改 `RDH_OAUTH_PORT` 可能需要重新登录。
 

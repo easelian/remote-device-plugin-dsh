@@ -28,6 +28,42 @@ On a remote or headless machine, the browser must run on the machine that can
 reach the callback address. Forward `localhost:3335` from the DSH host to your
 local browser if necessary. Do not paste tokens into chat.
 
+## Sign-in repeats, or the token file disappeared
+
+`mcp-remote` treats a 401 as invalid credentials and deletes
+`~/.mcp-auth/mcp-remote-v1/<hash>_tokens.json`, then starts a new browser
+authorization. There is no plaintext backup of that file; logs redact token
+values, so the old access/refresh token cannot be recovered locally. Sign in
+again with one clean flow.
+
+Repeated login pages usually mean the flow cannot finish, not that the browser
+login failed. Two common causes:
+
+1. **OAuth discovery or token exchange times out.** Check:
+
+   ```bash
+   curl -m 10 https://mcp.xdistribute.site/.well-known/oauth-authorization-server
+   curl -m 10 -X POST https://xdistribute.site:8090/token \
+     -d grant_type=refresh_token -d refresh_token=invalid -d client_id=test
+   ```
+
+   The public route can serve `/mcp` while its `/.well-known/*` and `/token`
+   routes hang. This bundle's launcher rewrites those server-side calls to
+   `RDH_DIRECT_ORIGIN` (default `https://xdistribute.site:8090`) and leaves
+   `/authorize` and `/mcp` on the public origin. If you disabled that fallback,
+   remove `RDH_DIRECT_ORIGIN=off` and reconnect.
+
+2. **A previous bridge is still holding the sign-in.** Stop DSH or disable the
+   MCP row, confirm no `mcp-remote` process is left, then enable it once. The
+   callback listener should appear on `127.0.0.1:3335` while the browser is
+   waiting; complete the authorization and wait for the "Authorization
+   successful!" page before closing the tab.
+
+A sign-in that is canceled, times out, or never reaches the callback leaves
+`code_verifier` and `discovery_state` files behind. They are harmless; a later
+successful sign-in deletes stale flows. Do not delete `tokens.json` while a
+refresh is in progress.
+
 ## Sign-in succeeds but calls return 401
 
 Access tokens are short-lived and refreshed in the background. If the service

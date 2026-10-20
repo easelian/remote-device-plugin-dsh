@@ -104,7 +104,8 @@ async function main() {
   }
 
   const url = process.env.RDH_MCP_URL?.trim() || DEFAULT_ENDPOINT
-  const args = buildProxyArgs({ proxyPath, url, port })
+  const preloadPath = fileURLToPath(new URL('./oauth-fetch.mjs', import.meta.url))
+  const args = ['--import', preloadPath, ...buildProxyArgs({ proxyPath, url, port })]
   const child = spawn(process.execPath, args, { stdio: 'inherit', env: process.env })
 
   const forward = (signal) => {

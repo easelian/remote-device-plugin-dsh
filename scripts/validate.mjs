@@ -29,6 +29,7 @@ const required = [
   'cordis.patch.yml',
   'index.js',
   'bin/launcher.mjs',
+  'bin/oauth-fetch.mjs',
   'locale/en.json',
   'locale/zh.json',
   'assets/icon.png',
@@ -55,7 +56,7 @@ check(manifest.type === 'module', 'package must be ESM')
 check(manifest.dsh?.bundle?.patch === './cordis.patch.yml', 'dsh.bundle.patch must point at cordis.patch.yml')
 check(manifest.engines?.dsh === '>=0.2.0', 'engines.dsh must declare the supported runtime')
 check(Boolean(manifest.dependencies?.['mcp-remote']), 'mcp-remote must be a runtime dependency')
-check(manifest.files?.includes('bin/launcher.mjs'), 'files must include the launcher')
+check(manifest.files?.includes('bin/*.mjs'), 'files must include the launcher and OAuth preload')
 check(manifest.files?.includes('index.js'), 'files must include the Host half')
 check(manifest.files?.includes('skills/**'), 'files must include the skill tree')
 check(manifest.files?.includes('market/*.json'), 'files must include the market index')

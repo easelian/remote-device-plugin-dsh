@@ -1,6 +1,6 @@
 {
   "name": "dsh-remote-device-hub",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "Connect authorized Linux and macOS devices to DeepSeek Harness through Remote Device Hub MCP.",
   "type": "module",
   "main": "index.js",
@@ -17,7 +17,7 @@
   "icon": "./assets/icon.png",
   "files": [
     "index.js",
-    "bin/launcher.mjs",
+    "bin/*.mjs",
     "cordis.patch.yml",
     "locale/*.json",
     "assets/*.png",
