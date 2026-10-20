@@ -66,6 +66,22 @@ has access, and that `git ls-remote` works for the repository from the machine
 running DSH. The plugin manager performs this check before `pnpm` starts. HTTPS
 specs need a token or credential helper; an SSH spec is usually simpler.
 
+If the diagnostic says `Host key verification failed`, the SSH key is not the
+problem: this host has not trusted GitHub's host key yet. Verify the published
+fingerprints against GitHub's documentation, then add the key:
+
+```bash
+ssh-keyscan -t ed25519 github.com > /tmp/github-ed25519
+ssh-keygen -lf /tmp/github-ed25519
+# Compare the fingerprint, then append the trusted line:
+cat /tmp/github-ed25519 >> ~/.ssh/known_hosts
+```
+
+The ED25519 fingerprint must be
+`SHA256:+DiY3wvvV6TuJJhbpZisF/zLDA0zPMSvHdkr4UvCOqU`. After that,
+`ssh -T git@github.com` should greet the account and the install can resolve the
+repository.
+
 ## Windows
 
 The launcher is started with the DSH executable plus

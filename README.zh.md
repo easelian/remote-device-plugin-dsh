@@ -17,7 +17,8 @@ macOS 设备。它提供：
 ## 前置条件
 
 - DeepSeek Harness `0.2.0` 或更新版本。
-- 对私有仓库的 Git 访问权限（已为 GitHub 配置 SSH key）。
+- 对私有仓库的 Git 访问权限（已为 GitHub 配置 SSH key，且 `github.com`
+  已加入 `~/.ssh/known_hosts`）。
 - 首次登录需要浏览器。
 - 允许在当前 DSH profile 安装插件。安装 bundle 会引入 Host 代码，插件管理器
   会要求 `danger-full-access` 批准。
@@ -147,7 +148,8 @@ Host 部分（`index.js`）不导入任何 DSH 包。存在 `ctx.skills` 时注�
 
 ## 升级与移除
 
-- **升级**：在插件页再次安装同一 Git 地址。替换正在运行的包后可能需要重启
+- **升级**：在插件页再次安装同一 Git 地址。如果管理器提示包已安装，请先移除
+  bundle 再重新安装，让 `pnpm` 解析新提交。替换正在运行的包后可能需要重启
   DSH；插件管理器会返回 `restart-required`。
 - **禁用**：在插件页关闭 bundle。MCP 连接和技能停止，但包仍保留。
 - **移除**：删除 bundle。本地 OAuth 令牌仍留在

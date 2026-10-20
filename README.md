@@ -16,7 +16,8 @@ No system Node.js is required: the bridge runs on the DSH runtime itself.
 ## Requirements
 
 - DeepSeek Harness `0.2.0` or newer.
-- Git access to the private repository (SSH key configured for GitHub).
+- Git access to the private repository (SSH key configured for GitHub, and
+  `github.com` present in `~/.ssh/known_hosts`).
 - A browser for the first Remote Device Hub sign-in.
 - Permission to install a bundle in the current DSH profile. The plugin manager
   asks for `danger-full-access` approval, because bundles add Host code.
@@ -154,9 +155,11 @@ details.
 
 ## Upgrading and removing
 
-- **Upgrade:** install the Git spec again from the Plugins page. Replacing a
-  running package may require restarting DSH; the plugin manager reports
-  `restart-required` when that is the case.
+- **Upgrade:** install the Git spec again from the Plugins page. If the manager
+  reports that the package is already installed, remove the bundle and install
+  it again so `pnpm` resolves the new commit. Replacing a running package may
+  require restarting DSH; the plugin manager reports `restart-required` when
+  that is the case.
 - **Disable:** turn the bundle off in the Plugins page. The MCP connection and
   the skill stop; the package remains installed.
 - **Remove:** remove the bundle. Local OAuth tokens remain in

@@ -65,10 +65,10 @@ and strips the leading slash on Windows drive-letter paths.
 - `next()` when no approval service is present;
 - `{ kind: 'ask', reason, displayReason }` for every other tool.
 
-The tool runtime resolves `ask` through `ctx.approval`; only `allowed-once`
-proceeds, and the decision is audited. The gate is deliberately conservative:
-a future Agent tool that is not added to the read-only set prompts rather than
-running silently.
+The tool runtime resolves `ask` through the approval service
+(`ctx.get('approval')`); only `allowed-once` proceeds, and the decision is
+audited. The gate is deliberately conservative: a future Agent tool that is not
+added to the read-only set prompts rather than running silently.
 
 This gate is defense in depth, not the authority boundary. The Hub enforces the
 account's authorization, the device Agent enforces roots and capability flags,
