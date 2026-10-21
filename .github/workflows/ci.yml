@@ -18,6 +18,7 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
+      - run: npm run style:check
       - run: npm run check
       - name: Check committed ESM matches TypeScript
-        run: git diff --exit-code -- index.js client.js bin scripts
+        run: git diff --exit-code -- index.js permissions.js client.js bin scripts

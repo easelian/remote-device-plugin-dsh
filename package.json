@@ -18,6 +18,7 @@
   "icon": "./assets/icon.png",
   "files": [
     "index.js",
+    "permissions.js",
     "client.js",
     "bin/*.mjs",
     "cordis.patch.yml",
@@ -60,12 +61,13 @@
     "mcp-remote": "^0.15.1"
   },
   "devDependencies": {
+    "@biomejs/biome": "2.5.15",
     "@deepseek-ai/dsh-plugin-market-index": "0.2.1-rc.2",
-    "semver": "^7.8.5",
-    "typescript": "7.0.2",
     "@types/node": "22.20.5",
+    "@types/react": "19.2.14",
     "@types/semver": "7.7.1",
-    "@types/react": "19.2.14"
+    "semver": "^7.8.5",
+    "typescript": "7.0.2"
   },
   "scripts": {
     "test": "node --test tests/*.test.mjs",
@@ -76,7 +78,11 @@
     "check": "npm run build && npm run validate && npm test",
     "build": "tsc -p tsconfig.json && tsc -p tsconfig.client.json",
     "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.client.json --noEmit",
-    "prepack": "npm run build"
+    "prepack": "npm run build",
+    "format": "biome format --write .",
+    "format:check": "biome format .",
+    "lint": "biome lint .",
+    "style:check": "biome check ."
   },
   "dsh": {
     "bundle": {

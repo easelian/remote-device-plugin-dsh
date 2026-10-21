@@ -255,6 +255,14 @@ each user must configure.
 
 ## Development
 
+`npm run format` formats maintained sources and tests. `npm run style:check`
+checks formatting and lint rules without editing files; `npm run lint` runs only
+lint rules. Biome is pinned as a development dependency. The common convention
+is two spaces, single quotes, semicolons, trailing commas, and one statement per
+line. Type-only imports are explicit; explicit `any` and `@ts-ignore` are rejected.
+Generated files and third-party code are outside the formatting scope.
+
+
 ```bash
 npm ci
 npm run check
@@ -262,7 +270,7 @@ npm run pack:check
 ```
 
 Edit TypeScript under `src/`. `npm run build` emits the existing `index.js`,
-`client.js`, `bin/*.mjs`, and `scripts/*.mjs` entrypoints. Keep those generated
+`client.js`, `permissions.js`, `bin/*.mjs`, and `scripts/*.mjs` entrypoints. Keep those generated
 files in version control for Git distribution; CI checks that they match the
 source. The browser entry uses the DSH module loader and the host-provided React.
 

@@ -20,13 +20,15 @@ const exists = async (path) => {
 };
 const failures = [];
 const check = (condition, message) => {
-    if (!condition)
+    if (!condition) {
         failures.push(message);
+    }
 };
 const required = [
     'package.json',
     'cordis.patch.yml',
     'index.js',
+    'permissions.js',
     'client.js',
     'bin/launcher.mjs',
     'bin/oauth-fetch.mjs',
@@ -104,8 +106,9 @@ for (const link of ['docs/architecture.md', 'docs/troubleshooting.md', 'docs/pub
 }
 if (failures.length > 0) {
     console.error(`validate: ${failures.length} problem(s)`);
-    for (const failure of failures)
+    for (const failure of failures) {
         console.error(`  - ${failure}`);
+    }
     process.exitCode = 1;
 }
 else {

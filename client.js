@@ -35,17 +35,20 @@ window.__ModuleLoader__.load({
             unavailable: '当前 profile 中没有可用的配置页面。',
             saveFailed: '修改未保存。',
         };
-        const OPTIONS = [
-            { value: 'always-ask', label: 'alwaysAsk', hint: 'alwaysAskHint' },
-            { value: 'read-only', label: 'readOnly', hint: 'readOnlyHint' },
-            { value: 'low-risk', label: 'lowRisk', hint: 'lowRiskHint' },
-            { value: 'allow-all', label: 'allowAll', hint: 'allowAllHint' },
-        ];
+        const OPTIONS = {
+            'always-ask': { label: 'alwaysAsk', hint: 'alwaysAskHint' },
+            'read-only': { label: 'readOnly', hint: 'readOnlyHint' },
+            'low-risk': { label: 'lowRisk', hint: 'lowRiskHint' },
+            'allow-all': { label: 'allowAll', hint: 'allowAllHint' },
+        };
+        function isPermissionMode(value) {
+            return typeof value === 'string' && Object.hasOwn(OPTIONS, value);
+        }
         function currentMode(state) {
             const raw = state?.value?.permissionMode;
-            const option = OPTIONS.find(option => option.value === raw);
-            if (option !== undefined)
-                return option.value;
+            if (isPermissionMode(raw)) {
+                return raw;
+            }
             return state?.value?.confirmMutations === false ? 'allow-all' : 'read-only';
         }
         function PermissionSettings(props) {
@@ -68,25 +71,48 @@ window.__ModuleLoader__.load({
             const update = (next) => {
                 setBusy(true);
                 setFailed(false);
-                Promise.resolve().then(() => form.mutate([{ op: 'set', path: ['permissionMode'], value: next }], state.revision)).then((accepted) => {
-                    if (!accepted)
+                Promise.resolve()
+                    .then(() => form.mutate([{ op: 'set', path: ['permissionMode'], value: next }], state.revision))
+                    .then((accepted) => {
+                    if (!accepted) {
                         setFailed(true);
-                }).catch(() => { setFailed(true); }).finally(() => { setBusy(false); });
+                    }
+                })
+                    .catch(() => {
+                    setFailed(true);
+                })
+                    .finally(() => {
+                    setBusy(false);
+                });
             };
             return h('fieldset', {
                 style: { border: 0, margin: 0, padding: 0, display: 'grid', gap: '8px' },
-            }, h('legend', { style: { padding: 0, marginBottom: '2px', fontWeight: 600 } }, t('title')), ...OPTIONS.map((option) => h('label', {
-                key: option.value,
-                style: { display: 'flex', alignItems: 'flex-start', gap: '9px', cursor: writable && !busy ? 'pointer' : 'default' },
+            }, h('legend', { style: { padding: 0, marginBottom: '2px', fontWeight: 600 } }, t('title')), ...Object.entries(OPTIONS).map(([value, option]) => h('label', {
+                key: value,
+                style: {
+                    display: 'flex',
+                    alignItems: 'flex-start',
+                    gap: '9px',
+                    cursor: writable && !busy ? 'pointer' : 'default',
+                },
             }, h('input', {
                 type: 'radio',
                 name: 'remote-device-hub-permission-mode',
-                value: option.value,
-                checked: mode === option.value,
+                value,
+                checked: mode === value,
                 disabled: !writable || busy,
-                onChange: () => { update(option.value); },
+                onChange: () => {
+                    if (isPermissionMode(value)) {
+                        update(value);
+                    }
+                },
                 style: { marginTop: '3px' },
-            }), h('span', { style: { display: 'grid', gap: '1px' } }, h('span', null, t(option.label)), h('span', { style: { opacity: 0.68, fontSize: '12px', lineHeight: 1.4 } }, t(option.hint))))), failed ? h('p', { role: 'status', style: { margin: 0, color: 'var(--dsw-color-danger, #c0392b)', fontSize: '12px' } }, t('saveFailed')) : null);
+            }), h('span', { style: { display: 'grid', gap: '1px' } }, h('span', null, t(option.label)), h('span', { style: { opacity: 0.68, fontSize: '12px', lineHeight: 1.4 } }, t(option.hint))))), failed
+                ? h('p', {
+                    role: 'status',
+                    style: { margin: 0, color: 'var(--dsw-color-danger, #c0392b)', fontSize: '12px' },
+                }, t('saveFailed'))
+                : null);
         }
         return {
             inject: ['slots', 'locale'],

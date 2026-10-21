@@ -30,6 +30,7 @@ jobs:
           registry-url: https://registry.npmjs.org
           cache: npm
       - run: npm ci
+      - run: npm run style:check
       - run: npm run check
       - name: Publish to npm
         # Add --provenance when this repository is public; npm cannot attest a

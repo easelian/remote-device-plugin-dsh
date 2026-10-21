@@ -10,8 +10,9 @@ function isRecord(value) {
     return value !== null && typeof value === 'object' && !Array.isArray(value);
 }
 function strings(value) {
-    if (!Array.isArray(value))
+    if (!Array.isArray(value)) {
         return [];
+    }
     const entries = value;
     return entries.filter((entry) => typeof entry === 'string');
 }

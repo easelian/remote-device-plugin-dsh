@@ -24,17 +24,25 @@ export function parseArgs(argv) {
     const options = {};
     for (let index = 0; index < argv.length; index += 1) {
         const arg = argv[index];
-        if (arg === undefined || !arg.startsWith('--'))
+        if (arg === undefined || !arg.startsWith('--')) {
             throw new Error(`Unexpected argument: ${arg}`);
+        }
         const key = arg.slice(2);
         if (key === 'no-preserve') {
             options.preserve = false;
             continue;
         }
         const value = argv[index + 1];
-        if (value === undefined || value.startsWith('--'))
+        if (value === undefined || value.startsWith('--')) {
             throw new Error(`${arg} needs a value`);
-        if (key !== 'source' && key !== 'commit' && key !== 'out' && key !== 'version' && key !== 'published-at' && key !== 'git-url' && key !== 'path') {
+        }
+        if (key !== 'source' &&
+            key !== 'commit' &&
+            key !== 'out' &&
+            key !== 'version' &&
+            key !== 'published-at' &&
+            key !== 'git-url' &&
+            key !== 'path') {
             throw new Error(`Unknown option: ${arg}`);
         }
         options[key] = value;
@@ -43,11 +51,15 @@ export function parseArgs(argv) {
     return options;
 }
 function gitCommit() {
-    return execFileSync('git', ['rev-parse', 'HEAD'], { cwd: fileURLToPath(ROOT), encoding: 'utf8' }).trim();
+    return execFileSync('git', ['rev-parse', 'HEAD'], {
+        cwd: fileURLToPath(ROOT),
+        encoding: 'utf8',
+    }).trim();
 }
 function resolveOutput(source, out) {
-    if (out === undefined)
+    if (out === undefined) {
         return source === 'git' ? 'market/index.git.json' : 'market/index.json';
+    }
     return isAbsolute(out) ? out : resolve(fileURLToPath(ROOT), out);
 }
 function validCommit(commit) {
@@ -61,8 +73,9 @@ function dataIcon(bytes) {
 }
 function currentVersion(pkg, options) {
     const version = options.version ?? pkg.version;
-    if (typeof version !== 'string' || version.length === 0)
+    if (typeof version !== 'string' || version.length === 0) {
         throw new Error('package.json has no version');
+    }
     return version;
 }
 async function readExisting(out) {
@@ -70,8 +83,9 @@ async function readExisting(out) {
         return parseMarketIndex(parseJson(await readFile(out, 'utf8')), 'https://market.invalid/index.json');
     }
     catch (error) {
-        if (record(error).code === 'ENOENT')
+        if (record(error).code === 'ENOENT') {
             return undefined;
+        }
         throw new Error(`Cannot read existing market index ${out}: ${error instanceof Error ? error.message : String(error)}`, { cause: error });
     }
 }
@@ -85,33 +99,38 @@ function mergeVersions(existing, current) {
 async function main() {
     const options = parseArgs(process.argv.slice(2));
     const source = options.source ?? (options.commit ? 'git' : 'npm');
-    if (source !== 'npm' && source !== 'git')
+    if (source !== 'npm' && source !== 'git') {
         throw new Error('--source must be npm or git');
+    }
     const pkg = packageManifest(parseJson(await readFile(PACKAGE_PATH, 'utf8')));
     const out = resolveOutput(source, options.out);
     const version = currentVersion(pkg, options);
     const publishedAt = options['published-at'] === undefined
         ? Math.floor(Date.now() / 1000)
         : Number(options['published-at']);
-    if (!Number.isInteger(publishedAt) || publishedAt <= 0)
+    if (!Number.isInteger(publishedAt) || publishedAt <= 0) {
         throw new Error('--published-at must be a positive Unix timestamp');
+    }
     const sourceSpec = source === 'npm'
         ? { type: 'npm' }
         : (() => {
             const url = options['git-url'] ?? DEFAULT_GIT_URL;
             const commit = options.commit ?? gitCommit();
-            if (!validCommit(commit))
+            if (!validCommit(commit)) {
                 throw new Error('--commit must be a lowercase 40-hex commit SHA');
-            if (!/^https:\/\/[^\s]+$/u.test(url))
+            }
+            if (!/^https:\/\/[^\s]+$/u.test(url)) {
                 throw new Error('--git-url must be an absolute https URL without credentials');
+            }
             return options.path === undefined
                 ? { type: 'git', url, commit }
                 : { type: 'git', url, commit, path: options.path };
         })();
     const existing = options.preserve === false ? undefined : await readExisting(out);
-    const previousTimestamp = existing?.plugins?.[0]?.versions
-        ?.find((entry) => entry?.version === version)?.publishTimestamp;
-    const timestamp = typeof previousTimestamp === 'number' && Number.isInteger(previousTimestamp) ? previousTimestamp : publishedAt;
+    const previousTimestamp = existing?.plugins?.[0]?.versions?.find((entry) => entry?.version === version)?.publishTimestamp;
+    const timestamp = typeof previousTimestamp === 'number' && Number.isInteger(previousTimestamp)
+        ? previousTimestamp
+        : publishedAt;
     const current = {
         version,
         publishTimestamp: timestamp,
@@ -160,8 +179,9 @@ async function main() {
     await writeFile(out, `${JSON.stringify(index, undefined, 2)}\n`);
     console.log(`market: wrote ${out} (${source}, ${version}, ${versions.length} version(s))`);
     console.log(`market: icon ${icon.length} bytes as a data URI`);
-    if (source === 'git')
+    if (source === 'git') {
         console.log('market: host this file at a public HTTPS URL that does not redirect');
+    }
 }
 try {
     await main();

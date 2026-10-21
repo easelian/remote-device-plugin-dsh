@@ -27,42 +27,49 @@ const DIRECT_PATHS = new Set([
     '/mcp',
 ]);
 export function directURL(input) {
-    if (!ENABLED)
+    if (!ENABLED) {
         return undefined;
+    }
     let url;
     try {
-        url = typeof input === 'string'
-            ? new URL(input)
-            : input instanceof URL
-                ? input
-                : isRecord(input) && typeof input.url === 'string'
-                    ? new URL(input.url)
-                    : undefined;
+        url =
+            typeof input === 'string'
+                ? new URL(input)
+                : input instanceof URL
+                    ? input
+                    : isRecord(input) && typeof input.url === 'string'
+                        ? new URL(input.url)
+                        : undefined;
     }
     catch {
         return undefined;
     }
-    if (url === undefined || url.origin !== PUBLIC_ORIGIN)
+    if (url === undefined || url.origin !== PUBLIC_ORIGIN) {
         return undefined;
+    }
     const path = url.pathname;
-    if (!path.startsWith('/.well-known/oauth-protected-resource') && !DIRECT_PATHS.has(path))
+    if (!path.startsWith('/.well-known/oauth-protected-resource') && !DIRECT_PATHS.has(path)) {
         return undefined;
+    }
     return `${DIRECT_ORIGIN}${path}${url.search}`;
 }
 function replaceInput(input, target) {
-    if (typeof input === 'string' || input instanceof URL)
+    if (typeof input === 'string' || input instanceof URL) {
         return target;
+    }
     return new Request(target, input);
 }
 const WRAPPED = Symbol.for('rdh.oauthFetch.wrapped');
 export function wrap(baseFetch) {
     const marker = Reflect.get(baseFetch, WRAPPED);
-    if (marker === true)
+    if (marker === true) {
         return baseFetch;
+    }
     const wrapped = async (input, init) => {
         const target = directURL(input);
-        if (target === undefined)
+        if (target === undefined) {
             return baseFetch(input, init);
+        }
         try {
             return await baseFetch(replaceInput(input, target), init);
         }
@@ -89,8 +96,9 @@ function isFetchModule(value) {
 function patchUndici(requireFrom) {
     try {
         const undici = requireFrom('undici');
-        if (isFetchModule(undici))
+        if (isFetchModule(undici)) {
             undici.fetch = wrap(undici.fetch.bind(undici));
+        }
     }
     catch {
         // A deployment without this copy of undici still uses the global wrapper.
@@ -103,7 +111,8 @@ if (ENABLED) {
     // undici copy, so patch the copy resolved from the proxy itself as well as
     // the one next to this preload.
     const proxyArg = process.argv.find((arg) => /(?:^|[\\/])mcp-remote[\\/]dist[\\/]proxy\.js$/u.test(arg));
-    if (proxyArg !== undefined)
+    if (proxyArg !== undefined) {
         patchUndici(createRequire(proxyArg));
+    }
     patchUndici(createRequire(import.meta.url));
 }

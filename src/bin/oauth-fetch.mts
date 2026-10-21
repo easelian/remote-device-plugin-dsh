@@ -13,13 +13,13 @@
  * before mcp-remote. It never logs request headers or bodies.
  */
 
-import { createRequire } from 'node:module'
+import { createRequire } from 'node:module';
 
-import { DEFAULT_DIRECT_ORIGIN, PUBLIC_ORIGIN as DEFAULT_PUBLIC_ORIGIN } from './config.mjs'
+import { DEFAULT_DIRECT_ORIGIN, PUBLIC_ORIGIN as DEFAULT_PUBLIC_ORIGIN } from './config.mjs';
 
-const PUBLIC_ORIGIN = (process.env.RDH_PUBLIC_ORIGIN ?? DEFAULT_PUBLIC_ORIGIN).replace(/\/$/u, '')
-const DIRECT_ORIGIN = (process.env.RDH_DIRECT_ORIGIN ?? DEFAULT_DIRECT_ORIGIN).replace(/\/$/u, '')
-const ENABLED = DIRECT_ORIGIN !== '' && DIRECT_ORIGIN.toLowerCase() !== 'off'
+const PUBLIC_ORIGIN = (process.env.RDH_PUBLIC_ORIGIN ?? DEFAULT_PUBLIC_ORIGIN).replace(/\/$/u, '');
+const DIRECT_ORIGIN = (process.env.RDH_DIRECT_ORIGIN ?? DEFAULT_DIRECT_ORIGIN).replace(/\/$/u, '');
+const ENABLED = DIRECT_ORIGIN !== '' && DIRECT_ORIGIN.toLowerCase() !== 'off';
 
 const DIRECT_PATHS = new Set([
   '/.well-known/oauth-authorization-server',
@@ -29,82 +29,104 @@ const DIRECT_PATHS = new Set([
   '/register',
   '/revoke',
   '/mcp',
-])
+]);
 
 export function directURL(input: unknown): string | undefined {
-  if (!ENABLED) return undefined
-  let url
-  try {
-    url = typeof input === 'string'
-      ? new URL(input)
-      : input instanceof URL
-        ? input
-        : isRecord(input) && typeof input.url === 'string'
-          ? new URL(input.url)
-          : undefined
-  } catch {
-    return undefined
+  if (!ENABLED) {
+    return undefined;
   }
-  if (url === undefined || url.origin !== PUBLIC_ORIGIN) return undefined
-  const path = url.pathname
-  if (!path.startsWith('/.well-known/oauth-protected-resource') && !DIRECT_PATHS.has(path)) return undefined
-  return `${DIRECT_ORIGIN}${path}${url.search}`
+  let url;
+  try {
+    url =
+      typeof input === 'string'
+        ? new URL(input)
+        : input instanceof URL
+          ? input
+          : isRecord(input) && typeof input.url === 'string'
+            ? new URL(input.url)
+            : undefined;
+  } catch {
+    return undefined;
+  }
+  if (url === undefined || url.origin !== PUBLIC_ORIGIN) {
+    return undefined;
+  }
+  const path = url.pathname;
+  if (!path.startsWith('/.well-known/oauth-protected-resource') && !DIRECT_PATHS.has(path)) {
+    return undefined;
+  }
+  return `${DIRECT_ORIGIN}${path}${url.search}`;
 }
 
-function replaceInput(input: Parameters<typeof fetch>[0], target: string): Parameters<typeof fetch>[0] {
-  if (typeof input === 'string' || input instanceof URL) return target
-  return new Request(target, input)
+function replaceInput(
+  input: Parameters<typeof fetch>[0],
+  target: string,
+): Parameters<typeof fetch>[0] {
+  if (typeof input === 'string' || input instanceof URL) {
+    return target;
+  }
+  return new Request(target, input);
 }
 
-const WRAPPED = Symbol.for('rdh.oauthFetch.wrapped')
+const WRAPPED = Symbol.for('rdh.oauthFetch.wrapped');
 
 export function wrap(baseFetch: typeof fetch): typeof fetch {
-  const marker: unknown = Reflect.get(baseFetch, WRAPPED)
-  if (marker === true) return baseFetch
+  const marker: unknown = Reflect.get(baseFetch, WRAPPED);
+  if (marker === true) {
+    return baseFetch;
+  }
   const wrapped: typeof fetch = async (input, init) => {
-    const target = directURL(input)
-    if (target === undefined) return baseFetch(input, init)
+    const target = directURL(input);
+    if (target === undefined) {
+      return baseFetch(input, init);
+    }
     try {
-      return await baseFetch(replaceInput(input, target), init)
+      return await baseFetch(replaceInput(input, target), init);
     } catch (directError) {
       // A self-hosted or healthy public route still works if the direct origin
       // is unavailable. Keep the original failure if both attempts fail.
       try {
-        return await baseFetch(input, init)
+        return await baseFetch(input, init);
       } catch {
-        throw directError
+        throw directError;
       }
     }
-  }
-  Object.defineProperty(wrapped, WRAPPED, { value: true })
-  return wrapped
+  };
+  Object.defineProperty(wrapped, WRAPPED, { value: true });
+  return wrapped;
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
-  return value !== null && typeof value === 'object'
+  return value !== null && typeof value === 'object';
 }
 
 function isFetchModule(value: unknown): value is { fetch: typeof fetch } {
-  return isRecord(value) && typeof value.fetch === 'function'
+  return isRecord(value) && typeof value.fetch === 'function';
 }
 
 function patchUndici(requireFrom: NodeJS.Require): void {
   try {
-    const undici: unknown = requireFrom('undici')
-    if (isFetchModule(undici)) undici.fetch = wrap(undici.fetch.bind(undici))
+    const undici: unknown = requireFrom('undici');
+    if (isFetchModule(undici)) {
+      undici.fetch = wrap(undici.fetch.bind(undici));
+    }
   } catch {
     // A deployment without this copy of undici still uses the global wrapper.
   }
 }
 
 if (ENABLED) {
-  globalThis.fetch = wrap(globalThis.fetch.bind(globalThis))
+  globalThis.fetch = wrap(globalThis.fetch.bind(globalThis));
 
   // mcp-remote imports `fetch as fetch2` from undici for token exchange and
   // transport requests. The plugin's dependency tree can hold more than one
   // undici copy, so patch the copy resolved from the proxy itself as well as
   // the one next to this preload.
-  const proxyArg = process.argv.find((arg) => /(?:^|[\\/])mcp-remote[\\/]dist[\\/]proxy\.js$/u.test(arg))
-  if (proxyArg !== undefined) patchUndici(createRequire(proxyArg))
-  patchUndici(createRequire(import.meta.url))
+  const proxyArg = process.argv.find((arg) =>
+    /(?:^|[\\/])mcp-remote[\\/]dist[\\/]proxy\.js$/u.test(arg),
+  );
+  if (proxyArg !== undefined) {
+    patchUndici(createRequire(proxyArg));
+  }
+  patchUndici(createRequire(import.meta.url));
 }

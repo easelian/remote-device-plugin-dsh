@@ -23,10 +23,12 @@ export function resolveProxy() {
  * `off` or `0` disables the preference and lets mcp-remote derive its own port.
  */
 export function preferredPort(raw = process.env.RDH_OAUTH_PORT) {
-    if (raw === undefined || raw === '')
+    if (raw === undefined || raw === '') {
         return DEFAULT_OAUTH_PORT;
-    if (raw === 'off' || raw === '0')
+    }
+    if (raw === 'off' || raw === '0') {
         return null;
+    }
     const port = Number(raw);
     if (!Number.isInteger(port) || port < 1 || port > 65535) {
         throw new Error(`RDH_OAUTH_PORT must be "off", "0", or a port from 1 to 65535 (received ${JSON.stringify(raw)})`);
@@ -34,10 +36,11 @@ export function preferredPort(raw = process.env.RDH_OAUTH_PORT) {
     return port;
 }
 /** Build the argv passed to mcp-remote. */
-export function buildProxyArgs({ proxyPath, url, port, transport = 'http-only' }) {
+export function buildProxyArgs({ proxyPath, url, port, transport = 'http-only', }) {
     const args = [proxyPath, url];
-    if (port !== null && port !== undefined)
+    if (port !== null && port !== undefined) {
         args.push(String(port));
+    }
     args.push('--transport', transport);
     return args;
 }
@@ -52,8 +55,9 @@ export async function isPortFree(port) {
         const server = net.createServer();
         let settled = false;
         const finish = (free) => {
-            if (settled)
+            if (settled) {
                 return;
+            }
             settled = true;
             server.removeAllListeners();
             if (!server.listening) {
@@ -103,8 +107,9 @@ async function main() {
     const args = ['--import', preloadPath, ...buildProxyArgs({ proxyPath, url, port })];
     const child = spawn(process.execPath, args, { stdio: 'inherit', env: process.env });
     const forward = (signal) => {
-        if (!child.killed)
+        if (!child.killed) {
             child.kill(signal);
+        }
     };
     const signals = ['SIGINT', 'SIGTERM', 'SIGHUP'];
     for (const signal of signals) {
@@ -129,8 +134,9 @@ async function main() {
  * differently, and a URL comparison would skip main() and exit silently.
  */
 export function isEntryPoint(entry = process.argv[1], moduleUrl = import.meta.url) {
-    if (entry === undefined)
+    if (entry === undefined) {
         return false;
+    }
     try {
         return realpathSync(entry) === realpathSync(fileURLToPath(moduleUrl));
     }

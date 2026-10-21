@@ -236,6 +236,11 @@ Host 部分（`index.js`）不导入任何 DSH 包。存在 `ctx.skills` 时注�
 
 ## 开发
 
+`npm run format` 格式化维护中的源码和测试；`npm run style:check` 只检查格式与
+Lint 规则，`npm run lint` 只运行 Lint。Biome 以固定版本作为开发依赖。统一使用
+两空格、单引号、分号、尾逗号，一行一条语句；显式标记类型导入，禁止显式 `any`
+和 `@ts-ignore`。生成文件及第三方代码不参与格式化。
+
 ```bash
 npm ci
 npm run check
@@ -243,7 +248,7 @@ npm run pack:check
 ```
 
 在 `src/` 下修改 TypeScript 源码。`npm run build` 生成现有的 `index.js`、
-`client.js`、`bin/*.mjs` 和 `scripts/*.mjs` 入口。为支持 Git 分发，生成文件也
+`client.js`、`permissions.js`、`bin/*.mjs` 和 `scripts/*.mjs` 入口。为支持 Git 分发，生成文件也
 保留在版本控制中，CI 会检查它们与源码是否一致；请勿直接修改生成文件。浏览器
 入口继续使用 DSH 模块加载器和宿主提供的 React。
 

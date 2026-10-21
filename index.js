@@ -13,6 +13,8 @@
 import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import z from '@deepseek-ai/schemastery';
+import { PERMISSION_MODES } from './permissions.js';
+export { PERMISSION_MODES } from './permissions.js';
 const PLUGIN_NAME = 'dsh-remote-device-hub';
 const PROVIDER_NAME = 'dsh-remote-device-hub';
 const SKILL_NAME = 'remote-device-hub';
@@ -28,10 +30,8 @@ function isRecord(value) {
 function isSkillRegistry(value) {
     return isRecord(value) && typeof value.registerProvider === 'function';
 }
-/** Permission levels offered on the Plugins row page. */
-export const PERMISSION_MODES = ['always-ask', 'read-only', 'low-risk', 'allow-all'];
 function isPermissionMode(value) {
-    return PERMISSION_MODES.some(mode => mode === value);
+    return PERMISSION_MODES.some((mode) => mode === value);
 }
 const DEFAULT_PERMISSION_MODE = 'read-only';
 /**
@@ -70,24 +70,20 @@ export const READ_ONLY_TOOLS = new Set([
  * and are cheap to undo. Everything else, including shell execution, file
  * writes, moves, and process termination, asks in `low-risk` mode.
  */
-export const LOW_RISK_TOOLS = new Set([
-    ...READ_ONLY_TOOLS,
-    'make_directory',
-    'stop_search',
-]);
+export const LOW_RISK_TOOLS = new Set([...READ_ONLY_TOOLS, 'make_directory', 'stop_search']);
 /** Read a plain or schemastery-volatile config value. */
 function configValue(value) {
-    return isRecord(value) && typeof value.get === 'function'
-        ? value.get()
-        : value;
+    return isRecord(value) && typeof value.get === 'function' ? value.get() : value;
 }
 /** Resolve the effective permission mode, including the legacy boolean. */
 export function resolvePermissionMode(config = {}) {
     const mode = configValue(config.permissionMode);
-    if (isPermissionMode(mode))
+    if (isPermissionMode(mode)) {
         return mode;
-    if (configValue(config.confirmMutations) === false)
+    }
+    if (configValue(config.confirmMutations) === false) {
         return 'allow-all';
+    }
     return DEFAULT_PERMISSION_MODE;
 }
 const CANDIDATE = {
@@ -104,8 +100,9 @@ const CANDIDATE = {
 export const name = PLUGIN_NAME;
 function stripFrontmatter(raw, path) {
     const match = /^---\r?\n[\s\S]*?\r?\n---(?:\r?\n|$)/u.exec(raw);
-    if (!match)
+    if (!match) {
         throw new Error(`${PLUGIN_NAME}: ${path} has no YAML frontmatter`);
+    }
     return raw.slice(match[0].length).trim();
 }
 function createProvider() {
@@ -132,25 +129,31 @@ export function mutationDecision(execution, options = {}) {
     const permissionMode = options.permissionMode ?? DEFAULT_PERMISSION_MODE;
     const prefix = `mcp__${serverName}__`;
     const toolName = typeof exec?.name === 'string' ? exec.name : '';
-    if (!toolName.startsWith(prefix))
+    if (!toolName.startsWith(prefix)) {
         return null;
+    }
     const tool = toolName.slice(prefix.length);
-    if (permissionMode === 'allow-all')
+    if (permissionMode === 'allow-all') {
         return null;
+    }
     if (permissionMode === 'read-only') {
-        if (READ_ONLY_TOOLS.has(tool))
+        if (READ_ONLY_TOOLS.has(tool)) {
             return null;
+        }
     }
     else if (permissionMode === 'low-risk') {
-        if (LOW_RISK_TOOLS.has(tool))
+        if (LOW_RISK_TOOLS.has(tool)) {
             return null;
+        }
         // A write with an empty expected hash is create-only: it cannot replace an
         // existing file. Overwriting still requires a hash and stays gated.
-        if (tool === 'write_file' && (args.expected_sha256 ?? '') === '')
+        if (tool === 'write_file' && (args.expected_sha256 ?? '') === '') {
             return null;
+        }
     }
-    if (!approvalAvailable)
+    if (!approvalAvailable) {
         return null;
+    }
     const rawDevice = args.device_id;
     const device = typeof rawDevice === 'string' && rawDevice.length > 0 ? rawDevice : undefined;
     const target = device === undefined ? 'the selected device' : `device ${device}`;
@@ -175,8 +178,9 @@ export function apply(ctx, config = {}) {
         : 'remote-device-hub';
     const registerSkill = (scope) => {
         const skills = scope.skills ?? (typeof scope.get === 'function' ? scope.get('skills') : undefined);
-        if (!isSkillRegistry(skills))
+        if (!isSkillRegistry(skills)) {
             return;
+        }
         skills.registerProvider(() => createProvider());
     };
     if (typeof ctx.inject === 'function') {
