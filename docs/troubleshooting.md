@@ -42,7 +42,7 @@ login failed. Two common causes:
 1. **OAuth discovery or token exchange times out.** Check:
 
    ```bash
-   curl -m 10 https://mcp.easelian.com/.well-known/oauth-authorization-server
+   curl -m 10 https://rdh.easelian.com/.well-known/oauth-authorization-server
    ```
 
    For a self-hosted Hub, use its configured OAuth origin instead. Direct

@@ -3,7 +3,7 @@
 [中文](README.zh.md)
 
 A DeepSeek Harness bundle that connects your authorized Linux and macOS devices
-through [Remote Device Hub](https://mcp.easelian.com/mcp). It contributes:
+through [Remote Device Hub](https://rdh.easelian.com/mcp). It contributes:
 
 - the Remote Device Hub MCP tools (`mcp__remote-device-hub__*`);
 - a `remote-device-hub` skill that explains safe device workflows;
@@ -147,7 +147,7 @@ restate every field you keep.
     env:
       ELECTRON_RUN_AS_NODE: '1'
       RDH_OAUTH_PORT: '3335'
-      RDH_MCP_URL: https://mcp.easelian.com/mcp
+      RDH_MCP_URL: https://rdh.easelian.com/mcp
     toolCallTimeoutMs: 90000
 ```
 
@@ -157,7 +157,7 @@ restate every field you keep.
 | `permissionMode` | `read-only` | `always-ask`, `read-only`, `low-risk`, or `allow-all`. The Plugins row page exposes the same field. |
 | `confirmMutations` | `true` | Legacy boolean kept for older profiles. `false` maps to `allow-all` only when `permissionMode` is not set. |
 | `RDH_OAUTH_PORT` | `3335` | Preferred loopback callback port. `off` or `0` lets `mcp-remote` derive a stable port. If the port is busy, this run falls back to the derived port. |
-| `RDH_MCP_URL` | `https://mcp.easelian.com/mcp` | Override the endpoint, for example for a self-hosted Hub. |
+| `RDH_MCP_URL` | `https://rdh.easelian.com/mcp` | Override the endpoint, for example for a self-hosted Hub. |
 | `RDH_DIRECT_ORIGIN` | Disabled | Optional explicit transport origin for server-side OAuth and MCP requests. Unset, empty, or `off` uses the configured public endpoints. |
 | `RDH_PUBLIC_ORIGIN` | Origin of `RDH_MCP_URL` | OAuth origin eligible for direct transport. Set explicitly only when the same Hub uses a separate OAuth origin. |
 
@@ -209,7 +209,7 @@ of the Host row's `Config`, which is what makes the settings form available.
 DSH MCP client  ──stdio──▶  bin/launcher.mjs  ──▶  mcp-remote
                                                    │  OAuth + refresh
                                                    ▼
-                                      https://mcp.easelian.com/mcp
+                                      https://rdh.easelian.com/mcp
 ```
 
 `@deepseek-ai/dsh-mcp-client` has no built-in OAuth flow; it supports stdio and

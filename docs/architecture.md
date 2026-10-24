@@ -19,7 +19,7 @@ on the public name prefix.
 DSH stdio MCP transport
   → node/Electron (ELECTRON_RUN_AS_NODE=1) bin/launcher.mjs
   → node/Electron mcp-remote/dist/proxy.js
-  → HTTPS Streamable HTTP https://mcp.easelian.com/mcp
+  → HTTPS Streamable HTTP https://rdh.easelian.com/mcp
 ```
 
 DSH's MCP client supports stdio and Streamable HTTP with static headers. It has
