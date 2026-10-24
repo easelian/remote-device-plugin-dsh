@@ -3,7 +3,7 @@
 # Two rows are inserted:
 #   1. dsh-mcp-client runs the stdio OAuth bridge bundled by this package. The
 #      bridge keeps the OAuth access/refresh token rotating in ~/.mcp-auth and
-#      forwards MCP traffic to https://mcp.xdistribute.site/mcp.
+#      forwards MCP traffic to the generated deployment endpoint.
 #   2. This package's Host half registers the remote-device-hub skill
 #      and asks for approval before a device-mutating MCP tool runs.
 #
@@ -26,7 +26,6 @@
               ? decodeURIComponent(u.pathname).replace(/^\/([A-Za-z]:)/, '$1')
               : decodeURIComponent(u.pathname))(
                 new URL('node_modules/dsh-remote-device-hub/bin/launcher.mjs', ctx.baseUrl))
-          - https://mcp.xdistribute.site/mcp
         env:
           # The Desktop app is Electron; this makes its executable behave as a
           # standalone Node runtime. A CLI-hosted DSH ignores the variable.

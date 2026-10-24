@@ -12,7 +12,7 @@ import { realpathSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import net from 'node:net';
 import { fileURLToPath } from 'node:url';
-import { DEFAULT_ENDPOINT, DEFAULT_OAUTH_PORT } from './config.mjs';
+import { DEFAULT_OAUTH_PORT, resolveConfig } from './config.mjs';
 const require = createRequire(import.meta.url);
 /** Resolve the installed mcp-remote proxy entry. */
 export function resolveProxy() {
@@ -37,11 +37,15 @@ export function preferredPort(raw = process.env.RDH_OAUTH_PORT) {
 }
 /** Build the argv passed to mcp-remote. */
 export function buildProxyArgs({ proxyPath, url, port, transport = 'http-only', }) {
-    const args = [proxyPath, url];
+    const endpoint = resolveConfig({ RDH_MCP_URL: url }).endpoint;
+    const args = [proxyPath, endpoint];
     if (port !== null && port !== undefined) {
         args.push(String(port));
     }
     args.push('--transport', transport);
+    if (new URL(endpoint).protocol === 'http:') {
+        args.push('--allow-http');
+    }
     return args;
 }
 /**
@@ -90,7 +94,9 @@ async function main() {
         return;
     }
     let port;
+    let config;
     try {
+        config = resolveConfig();
         port = preferredPort();
     }
     catch (error) {
@@ -102,7 +108,7 @@ async function main() {
         log(`OAuth callback port ${port} is busy; letting mcp-remote choose its derived port for this run.`);
         port = null;
     }
-    const url = process.env.RDH_MCP_URL?.trim() || DEFAULT_ENDPOINT;
+    const url = config.endpoint;
     const preloadPath = fileURLToPath(new URL('./oauth-fetch.mjs', import.meta.url));
     const args = ['--import', preloadPath, ...buildProxyArgs({ proxyPath, url, port })];
     const child = spawn(process.execPath, args, { stdio: 'inherit', env: process.env });

@@ -57,6 +57,23 @@ test('buildProxyArgs omits the positional port when disabled', () => {
   assert.deepEqual(args, ['/tmp/proxy.js', 'https://example.test/mcp', '--transport', 'http-only']);
 });
 
+test('loopback HTTP is allowed explicitly, while remote HTTP cannot reach the proxy', () => {
+  for (const host of ['localhost', '127.0.0.1', '[::1]']) {
+    const url = `http://${host}:8080/mcp`;
+    assert.deepEqual(buildProxyArgs({ proxyPath: '/tmp/proxy.js', url, port: null }), [
+      '/tmp/proxy.js',
+      url,
+      '--transport',
+      'http-only',
+      '--allow-http',
+    ]);
+  }
+  assert.throws(
+    () => buildProxyArgs({ proxyPath: '/tmp/proxy.js', url: 'http://hub.example/mcp' }),
+    /RDH_MCP_URL/,
+  );
+});
+
 test('resolveProxy points at the installed mcp-remote proxy', () => {
   assert.match(resolveProxy(), /mcp-remote[\\/]dist[\\/]proxy\.js$/u);
 });

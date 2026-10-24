@@ -19,7 +19,7 @@ on the public name prefix.
 DSH stdio MCP transport
   → node/Electron (ELECTRON_RUN_AS_NODE=1) bin/launcher.mjs
   → node/Electron mcp-remote/dist/proxy.js
-  → HTTPS Streamable HTTP https://mcp.xdistribute.site/mcp
+  → HTTPS Streamable HTTP https://mcp.easelian.com/mcp
 ```
 
 DSH's MCP client supports stdio and Streamable HTTP with static headers. It has
@@ -38,24 +38,19 @@ whether the preferred callback port is free, and spawns the proxy with
 lets `mcp-remote` derive one, so a busy port is not fatal.
 
 The launcher also preloads [`bin/oauth-fetch.mjs`](../bin/oauth-fetch.mjs) with
-`node --import`. The Hub's public Cloudflare route serves the browser
-authorization page, but its `/.well-known/*`, `/token`, and `/mcp` routes can
-time out. The preload rewrites those server-side OAuth calls and `/mcp` to
-`RDH_DIRECT_ORIGIN`, which serves the same authorization-server metadata, token
-endpoint, and MCP endpoint. Only the browser-facing `/authorize` URL stays on
-the public origin.
+`node --import`. Direct transport is disabled by default, so the preload leaves
+fetch unchanged. An explicit `RDH_DIRECT_ORIGIN` enables transport rewriting
+for recognized OAuth routes on `RDH_PUBLIC_ORIGIN` and the exact configured MCP
+endpoint path. The browser's `/authorize` route stays public. Direct failures
+are propagated without replaying requests through the public route.
 
-The direct origin is built from two constants in
-[`src/bin/config.mts`](../src/bin/config.mts):
-
-```js
-export const DIRECT_HOST = 'https://xdistribute.site'
-export const DIRECT_PORT = 8090
-```
-
-Change `DIRECT_PORT` in source, or set `RDH_DIRECT_ORIGIN` at runtime. Set
-`RDH_DIRECT_ORIGIN=off` to disable the fallback for a deployment whose public
-route is healthy.
+Generated defaults in [`src/bin/deployment-defaults.mts`](../src/bin/deployment-defaults.mts)
+supply the canonical MCP origin. The launcher and preload share validation in
+[`src/bin/config.mts`](../src/bin/config.mts). `RDH_MCP_URL` overrides the MCP
+endpoint and supplies the default OAuth origin; `RDH_PUBLIC_ORIGIN` can
+explicitly select a separate OAuth origin of the same Hub. Both origin
+settings accept only origins, not paths or queries. URLs require HTTPS except
+on loopback, and credentials and fragments are rejected.
 
 DSH scrubs credential-shaped ambient environment variables before starting a
 stdio server. The bridge does not need any secret in that environment: OAuth

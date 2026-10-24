@@ -1,30 +1,52 @@
-/**
- * Deployment defaults for the Remote Device Hub bridge.
- *
- * Change `DIRECT_PORT` (or `DIRECT_HOST`) here to move the Hub's direct OAuth
- * origin. Every environment variable below remains an override, so a profile
- * can change one deployment without editing this file.
- *
- *   RDH_MCP_URL        full MCP endpoint
- *   RDH_PUBLIC_ORIGIN  public browser/OAuth origin
- *   RDH_DIRECT_ORIGIN  full direct OAuth/MCP origin
- *   RDH_OAUTH_PORT     preferred loopback callback port
- */
+/** Deployment defaults and validated runtime overrides for the stdio bridge. */
+import { MCP_PUBLIC_URL } from './deployment-defaults.mjs';
 
-/** Public origin used by the browser authorization page and the MCP endpoint. */
-export const PUBLIC_ORIGIN = 'https://mcp.xdistribute.site';
-
-/** Host of the Hub's direct origin. */
-export const DIRECT_HOST = 'https://xdistribute.site';
-
-/** Port of the Hub's direct origin. Change this to move the direct service. */
-export const DIRECT_PORT = 8090;
-
-/** Default MCP endpoint; `RDH_MCP_URL` overrides it. */
+export const PUBLIC_ORIGIN = validatedURL(MCP_PUBLIC_URL, 'MCP_PUBLIC_URL', true).origin;
 export const DEFAULT_ENDPOINT = `${PUBLIC_ORIGIN}/mcp`;
-
-/** Default direct origin; `RDH_DIRECT_ORIGIN` overrides it. */
-export const DEFAULT_DIRECT_ORIGIN = `${DIRECT_HOST}:${DIRECT_PORT}`;
-
-/** Preferred loopback OAuth callback port; `RDH_OAUTH_PORT` overrides it. */
+export const DEFAULT_DIRECT_ORIGIN = '';
 export const DEFAULT_OAUTH_PORT = 3335;
+
+export interface BridgeConfig {
+  endpoint: string;
+  publicOrigin: string;
+  directOrigin: string;
+}
+
+/** Keep custom endpoints and OAuth on the same Hub unless explicitly overridden. */
+export function resolveConfig(env: NodeJS.ProcessEnv = process.env): BridgeConfig {
+  const endpoint = validatedURL(env.RDH_MCP_URL ?? DEFAULT_ENDPOINT, 'RDH_MCP_URL');
+  const publicOrigin = validatedURL(
+    env.RDH_PUBLIC_ORIGIN ?? endpoint.origin,
+    'RDH_PUBLIC_ORIGIN',
+    true,
+  ).origin;
+  const rawDirect = (env.RDH_DIRECT_ORIGIN ?? DEFAULT_DIRECT_ORIGIN).trim();
+  const directOrigin =
+    rawDirect === '' || rawDirect.toLowerCase() === 'off'
+      ? ''
+      : validatedURL(rawDirect, 'RDH_DIRECT_ORIGIN', true).origin;
+  return { endpoint: endpoint.href, publicOrigin, directOrigin };
+}
+
+function validatedURL(value: string, setting: string, originOnly = false): URL {
+  let url: URL;
+  try {
+    url = new URL(value.trim());
+  } catch {
+    throw new Error(`${setting} must be an absolute HTTPS URL (HTTP is allowed on loopback).`);
+  }
+  const loopback =
+    url.hostname === 'localhost' ||
+    url.hostname === '[::1]' ||
+    /^127(?:\.[0-9]{1,3}){3}$/u.test(url.hostname);
+  if (url.protocol !== 'https:' && !(url.protocol === 'http:' && loopback)) {
+    throw new Error(`${setting} requires HTTPS; HTTP is allowed only on loopback.`);
+  }
+  if (url.username || url.password || url.hash || value.includes('#')) {
+    throw new Error(`${setting} must not contain credentials or a fragment.`);
+  }
+  if (originOnly && (url.pathname !== '/' || url.search || value.includes('?'))) {
+    throw new Error(`${setting} must be an origin without a path or query.`);
+  }
+  return url;
+}

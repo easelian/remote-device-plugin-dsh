@@ -14,7 +14,7 @@ import { createRequire } from 'node:module';
 import net from 'node:net';
 import { fileURLToPath } from 'node:url';
 
-import { DEFAULT_ENDPOINT, DEFAULT_OAUTH_PORT } from './config.mjs';
+import { DEFAULT_OAUTH_PORT, resolveConfig } from './config.mjs';
 
 const require = createRequire(import.meta.url);
 
@@ -55,11 +55,15 @@ export function buildProxyArgs({
   port?: number | null;
   transport?: string;
 }): string[] {
-  const args = [proxyPath, url];
+  const endpoint = resolveConfig({ RDH_MCP_URL: url }).endpoint;
+  const args = [proxyPath, endpoint];
   if (port !== null && port !== undefined) {
     args.push(String(port));
   }
   args.push('--transport', transport);
+  if (new URL(endpoint).protocol === 'http:') {
+    args.push('--allow-http');
+  }
   return args;
 }
 
@@ -110,7 +114,9 @@ async function main() {
   }
 
   let port;
+  let config;
   try {
+    config = resolveConfig();
     port = preferredPort();
   } catch (error) {
     log(error instanceof Error ? error.message : String(error));
@@ -125,7 +131,7 @@ async function main() {
     port = null;
   }
 
-  const url = process.env.RDH_MCP_URL?.trim() || DEFAULT_ENDPOINT;
+  const url = config.endpoint;
   const preloadPath = fileURLToPath(new URL('./oauth-fetch.mjs', import.meta.url));
   const args = ['--import', preloadPath, ...buildProxyArgs({ proxyPath, url, port })];
   const child = spawn(process.execPath, args, { stdio: 'inherit', env: process.env });

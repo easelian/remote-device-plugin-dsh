@@ -3,7 +3,7 @@
 [中文](README.zh.md)
 
 A DeepSeek Harness bundle that connects your authorized Linux and macOS devices
-through [Remote Device Hub](https://mcp.xdistribute.site/mcp). It contributes:
+through [Remote Device Hub](https://mcp.easelian.com/mcp). It contributes:
 
 - the Remote Device Hub MCP tools (`mcp__remote-device-hub__*`);
 - a `remote-device-hub` skill that explains safe device workflows;
@@ -144,11 +144,10 @@ restate every field you keep.
           ? decodeURIComponent(u.pathname).replace(/^\/([A-Za-z]:)/, '$1')
           : decodeURIComponent(u.pathname))(
             new URL('node_modules/dsh-remote-device-hub/bin/launcher.mjs', ctx.baseUrl))
-      - https://mcp.xdistribute.site/mcp
     env:
       ELECTRON_RUN_AS_NODE: '1'
       RDH_OAUTH_PORT: '3335'
-      RDH_MCP_URL: https://mcp.xdistribute.site/mcp
+      RDH_MCP_URL: https://mcp.easelian.com/mcp
     toolCallTimeoutMs: 90000
 ```
 
@@ -158,25 +157,26 @@ restate every field you keep.
 | `permissionMode` | `read-only` | `always-ask`, `read-only`, `low-risk`, or `allow-all`. The Plugins row page exposes the same field. |
 | `confirmMutations` | `true` | Legacy boolean kept for older profiles. `false` maps to `allow-all` only when `permissionMode` is not set. |
 | `RDH_OAUTH_PORT` | `3335` | Preferred loopback callback port. `off` or `0` lets `mcp-remote` derive a stable port. If the port is busy, this run falls back to the derived port. |
-| `RDH_MCP_URL` | `https://mcp.xdistribute.site/mcp` | Override the endpoint, for example for a self-hosted Hub. |
-| `RDH_DIRECT_ORIGIN` | `https://xdistribute.site:8090` | Server-side OAuth and `/mcp` origin used when the public proxy route is unreliable. Set `off` to use the public origin for those calls too. The code default is `DIRECT_HOST:DIRECT_PORT` in [src/bin/config.mts](src/bin/config.mts); edit `DIRECT_PORT` there to change it in source. |
-| `RDH_PUBLIC_ORIGIN` | `https://mcp.xdistribute.site` | Public origin whose OAuth paths and `/mcp` are rewritten to `RDH_DIRECT_ORIGIN`. |
+| `RDH_MCP_URL` | `https://mcp.easelian.com/mcp` | Override the endpoint, for example for a self-hosted Hub. |
+| `RDH_DIRECT_ORIGIN` | Disabled | Optional explicit transport origin for server-side OAuth and MCP requests. Unset, empty, or `off` uses the configured public endpoints. |
+| `RDH_PUBLIC_ORIGIN` | Origin of `RDH_MCP_URL` | OAuth origin eligible for direct transport. Set explicitly only when the same Hub uses a separate OAuth origin. |
 
-The direct origin is a single constant pair in [src/bin/config.mts](src/bin/config.mts):
+Deployment defaults come from the generated
+[`src/bin/deployment-defaults.mts`](src/bin/deployment-defaults.mts). Runtime
+configuration is validated in [`src/bin/config.mts`](src/bin/config.mts).
+Changing `RDH_MCP_URL` also changes the default OAuth origin to that endpoint's
+origin. It never enables a direct origin implicitly.
 
-```js
-export const DIRECT_HOST = 'https://xdistribute.site'
-export const DIRECT_PORT = 8090
-```
+URLs require HTTPS, except for HTTP on loopback. Origin settings must not have
+paths, queries, fragments, or credentials. Invalid settings stop the launcher
+with a configuration error.
 
-Change `DIRECT_PORT` to move the direct service without touching the launcher or
-the OAuth preload. `RDH_DIRECT_ORIGIN` overrides the pair at runtime.
-
-The launcher preloads a small fetch rewrite for the OAuth server-side paths
-(`/.well-known/*`, `/token`, `/register`, `/revoke`) and `/mcp`. Only the
-browser-facing `/authorize` URL stays on the public origin. This matches the
-Hub's deployment: the public route serves the browser, while the direct origin
-serves OAuth exchange and MCP traffic.
+When explicitly enabled, the fetch preload sends recognized server-side OAuth
+paths and the configured MCP endpoint path to `RDH_DIRECT_ORIGIN`. Browser
+`/authorize` requests stay public. Configure only a direct origin serving the
+same Hub, because it receives tokens and MCP traffic. Failed requests are not
+retried through the public route: a transport error does not establish whether
+the Hub already processed a token refresh or tool call.
 
 Because the OAuth client registration is tied to the callback port, changing
 `RDH_OAUTH_PORT` after sign-in can require signing in again.
@@ -209,7 +209,7 @@ of the Host row's `Config`, which is what makes the settings form available.
 DSH MCP client  ──stdio──▶  bin/launcher.mjs  ──▶  mcp-remote
                                                    │  OAuth + refresh
                                                    ▼
-                                      https://mcp.xdistribute.site/mcp
+                                      https://mcp.easelian.com/mcp
 ```
 
 `@deepseek-ai/dsh-mcp-client` has no built-in OAuth flow; it supports stdio and

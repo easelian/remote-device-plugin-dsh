@@ -85,7 +85,6 @@ const patch = await read('cordis.patch.yml');
 for (const token of [
   '@deepseek-ai/dsh-mcp-client',
   'serverName: remote-device-hub',
-  'https://mcp.xdistribute.site/mcp',
   'node_modules/dsh-remote-device-hub/bin/launcher.mjs',
   "ELECTRON_RUN_AS_NODE: '1'",
   'name: dsh-remote-device-hub',

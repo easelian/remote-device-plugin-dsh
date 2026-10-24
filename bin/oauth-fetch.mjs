@@ -1,22 +1,12 @@
 /**
- * Preload for the stdio OAuth bridge.
- *
- * The public Cloudflare route serves the browser authorization page, but its
- * /.well-known/*, /token, and /mcp routes can time out. The Hub's direct origin
- * (`DIRECT_HOST:DIRECT_PORT` in `config.mjs`, overridable with
- * RDH_DIRECT_ORIGIN) serves the same OAuth contract and MCP endpoint. Rewrite
- * the server-side OAuth calls and /mcp to that origin; only the browser
- * authorization URL stays on the public origin.
- *
- * mcp-remote calls both global `fetch` and the `fetch` exported by `undici`, so
- * both entry points are wrapped. This module is loaded with `node --import`
- * before mcp-remote. It never logs request headers or bodies.
+ * Optional direct transport, enabled only by RDH_DIRECT_ORIGIN.
+ * Browser authorization stays public. Server-side OAuth and the configured
+ * MCP endpoint can use an explicitly configured origin of the same Hub.
+ * Failed requests are never replayed: a timeout does not prove non-delivery.
  */
 import { createRequire } from 'node:module';
-import { DEFAULT_DIRECT_ORIGIN, PUBLIC_ORIGIN as DEFAULT_PUBLIC_ORIGIN } from './config.mjs';
-const PUBLIC_ORIGIN = (process.env.RDH_PUBLIC_ORIGIN ?? DEFAULT_PUBLIC_ORIGIN).replace(/\/$/u, '');
-const DIRECT_ORIGIN = (process.env.RDH_DIRECT_ORIGIN ?? DEFAULT_DIRECT_ORIGIN).replace(/\/$/u, '');
-const ENABLED = DIRECT_ORIGIN !== '' && DIRECT_ORIGIN.toLowerCase() !== 'off';
+import { resolveConfig } from './config.mjs';
+const CONFIG = resolveConfig();
 const DIRECT_PATHS = new Set([
     '/.well-known/oauth-authorization-server',
     '/.well-known/openid-configuration',
@@ -24,10 +14,9 @@ const DIRECT_PATHS = new Set([
     '/token/refresh',
     '/register',
     '/revoke',
-    '/mcp',
 ]);
-export function directURL(input) {
-    if (!ENABLED) {
+export function directURL(input, config = CONFIG) {
+    if (!config.directOrigin) {
         return undefined;
     }
     let url;
@@ -44,14 +33,20 @@ export function directURL(input) {
     catch {
         return undefined;
     }
-    if (url === undefined || url.origin !== PUBLIC_ORIGIN) {
+    if (url === undefined || url.username || url.password) {
         return undefined;
     }
     const path = url.pathname;
-    if (!path.startsWith('/.well-known/oauth-protected-resource') && !DIRECT_PATHS.has(path)) {
+    const endpoint = new URL(config.endpoint);
+    const isMcp = url.origin === endpoint.origin && path === endpoint.pathname;
+    const isOAuth = url.origin === config.publicOrigin && DIRECT_PATHS.has(path);
+    const isResourceMetadata = url.origin === endpoint.origin &&
+        (path === '/.well-known/oauth-protected-resource' ||
+            path.startsWith('/.well-known/oauth-protected-resource/'));
+    if (!isMcp && !isOAuth && !isResourceMetadata) {
         return undefined;
     }
-    return `${DIRECT_ORIGIN}${path}${url.search}`;
+    return `${config.directOrigin}${path}${url.search}`;
 }
 function replaceInput(input, target) {
     if (typeof input === 'string' || input instanceof URL) {
@@ -60,29 +55,17 @@ function replaceInput(input, target) {
     return new Request(target, input);
 }
 const WRAPPED = Symbol.for('rdh.oauthFetch.wrapped');
-export function wrap(baseFetch) {
+export function wrap(baseFetch, config = CONFIG) {
     const marker = Reflect.get(baseFetch, WRAPPED);
     if (marker === true) {
         return baseFetch;
     }
     const wrapped = async (input, init) => {
-        const target = directURL(input);
+        const target = directURL(input, config);
         if (target === undefined) {
             return baseFetch(input, init);
         }
-        try {
-            return await baseFetch(replaceInput(input, target), init);
-        }
-        catch (directError) {
-            // A self-hosted or healthy public route still works if the direct origin
-            // is unavailable. Keep the original failure if both attempts fail.
-            try {
-                return await baseFetch(input, init);
-            }
-            catch {
-                throw directError;
-            }
-        }
+        return baseFetch(replaceInput(input, target), init);
     };
     Object.defineProperty(wrapped, WRAPPED, { value: true });
     return wrapped;
@@ -104,7 +87,7 @@ function patchUndici(requireFrom) {
         // A deployment without this copy of undici still uses the global wrapper.
     }
 }
-if (ENABLED) {
+if (CONFIG.directOrigin) {
     globalThis.fetch = wrap(globalThis.fetch.bind(globalThis));
     // mcp-remote imports `fetch as fetch2` from undici for token exchange and
     // transport requests. The plugin's dependency tree can hold more than one

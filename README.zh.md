@@ -3,7 +3,7 @@
 [English](README.md)
 
 这是一个 DeepSeek Harness 组合包（bundle），通过
-[Remote Device Hub](https://mcp.xdistribute.site/mcp) 连接你已授权的 Linux 和
+Remote Device Hub 连接你已授权的 Linux 和
 macOS 设备。它提供：
 
 - Remote Device Hub MCP 工具（`mcp__remote-device-hub__*`）；
@@ -137,11 +137,10 @@ list_searches, get_search_results, read_process, list_processes
           ? decodeURIComponent(u.pathname).replace(/^\/([A-Za-z]:)/, '$1')
           : decodeURIComponent(u.pathname))(
             new URL('node_modules/dsh-remote-device-hub/bin/launcher.mjs', ctx.baseUrl))
-      - https://mcp.xdistribute.site/mcp
     env:
       ELECTRON_RUN_AS_NODE: '1'
       RDH_OAUTH_PORT: '3335'
-      RDH_MCP_URL: https://mcp.xdistribute.site/mcp
+      RDH_MCP_URL: https://hub.example.test/mcp
     toolCallTimeoutMs: 90000
 ```
 
@@ -151,24 +150,18 @@ list_searches, get_search_results, read_process, list_processes
 | `permissionMode` | `read-only` | `always-ask`、`read-only`、`low-risk` 或 `allow-all`。插件行页面也提供同一字段。 |
 | `confirmMutations` | `true` | 兼容旧 profile 的布尔值。只有未设置 `permissionMode` 时，`false` 才映射为 `allow-all`。 |
 | `RDH_OAUTH_PORT` | `3335` | 首选的 loopback 回调端口。`off` 或 `0` 表示让 `mcp-remote` 自行推导端口。端口被占用时，本次运行会退回推导端口。 |
-| `RDH_MCP_URL` | `https://mcp.xdistribute.site/mcp` | 覆盖 endpoint，例如自建 Hub。 |
-| `RDH_DIRECT_ORIGIN` | `https://xdistribute.site:8090` | 当公网代理路由不稳定时，服务端 OAuth 和 `/mcp` 使用的直连 origin。设为 `off` 则这些请求也走公网 origin。代码默认值来自 [src/bin/config.mts](src/bin/config.mts) 的 `DIRECT_HOST:DIRECT_PORT`；改 `DIRECT_PORT` 即可改源码默认值。 |
-| `RDH_PUBLIC_ORIGIN` | `https://mcp.xdistribute.site` | 其 OAuth 路径和 `/mcp` 会被改写到 `RDH_DIRECT_ORIGIN` 的公网 origin。 |
+| `RDH_MCP_URL` | 发布配置中的 MCP 地址 | 覆盖 endpoint，例如 `https://hub.example.test/mcp`。 |
+| `RDH_DIRECT_ORIGIN` | 不启用 | 同一 Hub 的可选直连 origin。只有显式设置才会改写服务端请求；`off` 或空字符串禁用。 |
+| `RDH_PUBLIC_ORIGIN` | `RDH_MCP_URL` 的 origin | OAuth 公开 origin；只有与 MCP 入口不同且已确认属于同一 Hub 时才需设置。 |
 
-直连 origin 只由 [src/bin/config.mts](src/bin/config.mts) 里的两个常量决定：
+发布默认值位于生成文件 [src/bin/deployment-defaults.mts](src/bin/deployment-defaults.mts)，
+由 Server 仓库的 `scripts/sync-deployment.py` 根据 `deploy/config.json` 生成。
+自建 Hub 通常只需设置 `RDH_MCP_URL`，授权与连接都会使用该入口，不会退回官方域名。
+上面的 `hub.example.test` 是示例，使用前应替换成自己的地址。
 
-```js
-export const DIRECT_HOST = 'https://xdistribute.site'
-export const DIRECT_PORT = 8090
-```
-
-改 `DIRECT_PORT` 即可移动直连服务，不需要改 launcher 或 OAuth 预加载文件。
-运行时仍可用 `RDH_DIRECT_ORIGIN` 覆盖。
-
-launcher 会预加载一个小的 fetch 改写，作用于 OAuth 服务端路径
-（`/.well-known/*`、`/token`、`/register`、`/revoke`）以及 `/mcp`；只有浏览器
-使用的 `/authorize` 仍走公网 origin。这与当前 Hub 部署一致：公网路由承载浏览器，
-8090 直连 origin 承载 OAuth 交换和 MCP 流量。
+启用直连后，launcher 会改写指定 Hub 的 OAuth 服务端路径和 MCP endpoint；
+浏览器的 `/authorize` 仍使用公开入口。请求失败后不会自动重发到另一入口，
+因为超时不能证明刷新令牌或写操作尚未执行。
 
 OAuth 客户端注册与回调端口绑定，登录后再修改 `RDH_OAUTH_PORT` 可能需要重新登录。
 
@@ -198,7 +191,7 @@ bundle 为它的 Host 行提供了一个配置控件。打开侧边栏 **插件 
 DSH MCP 客户端  ──stdio──▶  bin/launcher.mjs  ──▶  mcp-remote
                                                    │  OAuth + 刷新
                                                    ▼
-                                      https://mcp.xdistribute.site/mcp
+                                      配置中的 MCP endpoint
 ```
 
 `@deepseek-ai/dsh-mcp-client` 目前没有内置 OAuth，只支持 stdio 和带静态 header
@@ -255,7 +248,7 @@ npm run pack:check
 两份编译配置均启用 `strict`、`noUncheckedIndexedAccess` 和
 `exactOptionalPropertyTypes`。npm 包只携带预编译 ESM 和资源，TypeScript 及
 类型声明仅作为开发依赖，使用者无需 TypeScript 运行时。测试覆盖审批模式、
-设置更新、OAuth 路由与回退、技能提供者及 launcher 行为。
+设置更新、OAuth 路由与不重放行为、技能提供者及 launcher 行为。
 
 ## 许可证
 

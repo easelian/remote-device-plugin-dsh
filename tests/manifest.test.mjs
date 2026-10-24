@@ -42,7 +42,6 @@ test('the patch mounts the MCP bridge and the Host half', async () => {
   const patch = await read('../cordis.patch.yml');
   assert.match(patch, /@deepseek-ai\/dsh-mcp-client/u);
   assert.match(patch, /serverName: remote-device-hub/u);
-  assert.match(patch, /https:\/\/mcp\.xdistribute\.site\/mcp/u);
   assert.match(patch, /node_modules\/dsh-remote-device-hub\/bin\/launcher\.mjs/u);
   assert.match(patch, /ELECTRON_RUN_AS_NODE: '1'/u);
   assert.match(patch, /name: dsh-remote-device-hub/u);

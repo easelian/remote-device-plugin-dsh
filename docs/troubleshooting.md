@@ -42,16 +42,16 @@ login failed. Two common causes:
 1. **OAuth discovery or token exchange times out.** Check:
 
    ```bash
-   curl -m 10 https://mcp.xdistribute.site/.well-known/oauth-authorization-server
-   curl -m 10 -X POST https://xdistribute.site:8090/token \
-     -d grant_type=refresh_token -d refresh_token=invalid -d client_id=test
+   curl -m 10 https://mcp.easelian.com/.well-known/oauth-authorization-server
    ```
 
-   The public route can serve `/mcp` while its `/.well-known/*` and `/token`
-   routes hang. This bundle's launcher rewrites those server-side calls to
-   `RDH_DIRECT_ORIGIN` (default `https://xdistribute.site:8090`) and leaves
-   `/authorize` and `/mcp` on the public origin. If you disabled that fallback,
-   remove `RDH_DIRECT_ORIGIN=off` and reconnect.
+   For a self-hosted Hub, use its configured OAuth origin instead. Direct
+   transport is disabled by default. If the deployment provides a separate
+   direct origin serving the same Hub, set `RDH_DIRECT_ORIGIN` explicitly in
+   the MCP row's environment. It receives the server-side OAuth and MCP
+   traffic; the browser authorization route remains public. A failed request
+   is not automatically replayed on another route. Investigate uncertain
+   token refresh or tool-call outcomes before retrying.
 
 2. **A previous bridge is still holding the sign-in.** Stop DSH or disable the
    MCP row, confirm no `mcp-remote` process is left, then enable it once. The
@@ -69,8 +69,8 @@ refresh is in progress.
 Access tokens are short-lived and refreshed in the background. If the service
 revoked the grant, remove the bundle's local token cache and restart DSH; then
 sign in again. Tokens live in `~/.mcp-auth/mcp-remote-v1/`; files are named by
-the MD5 of the endpoint URL. For the default endpoint the prefix is
-`095db0f76015a5dc9e2dd8f20e97f440_`.
+the MD5 of the endpoint URL. Changing the endpoint changes this cache key;
+use the configured URL when identifying its files.
 
 Do not delete the whole `~/.mcp-auth` directory if other tools use
 `mcp-remote`; delete only this endpoint's files, or revoke the connection in
