@@ -5,5 +5,5 @@ coverage/
 .DS_Store
 .env
 .env.*
-releases/*.tmp
+/releases/
 *.tsbuildinfo
