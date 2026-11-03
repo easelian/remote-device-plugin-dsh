@@ -30,7 +30,7 @@ window.__ModuleLoader__.load({
             lowRisk: '放行低风险工具',
             lowRiskHint: '自动放行读取、创建新文件或目录、停止搜索；覆盖写入、移动、shell 命令和进程控制仍会询问。',
             allowAll: '允许全部工具',
-            allowAllHint: '使用工具时不再询问。这伴随更高风险。',
+            allowAllHint: '执行工具时无需确认，风险较高。',
             loading: '正在读取配置…',
             unavailable: '当前 profile 中没有可用的配置页面。',
             saveFailed: '修改未保存。',

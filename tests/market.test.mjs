@@ -25,10 +25,10 @@ test('the market install target is the package and exact version', () => {
   assert.equal(target.registry, undefined);
 });
 
-test('the market icon is a bounded inline PNG', () => {
+test('the market icon is the bundled SVG within the inline size limit', async () => {
   const plugin = index.plugins.find((entry) => entry.name === manifest.name);
-  assert.match(plugin.icon, /^data:image\/png;base64,/u);
+  assert.match(plugin.icon, /^data:image\/svg\+xml;base64,/u);
   const bytes = Buffer.from(plugin.icon.split(',')[1], 'base64');
-  assert.equal(bytes.subarray(0, 8).toString('hex'), '89504e470d0a1a0a');
+  assert.deepEqual(bytes, await readFile(new URL('../assets/icon.svg', import.meta.url)));
   assert.ok(bytes.byteLength <= 32 * 1024);
 });

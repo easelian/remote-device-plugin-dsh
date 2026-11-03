@@ -224,7 +224,7 @@ test('allow-all accepts every tool', async () => {
   );
 });
 
-test('the legacy confirmMutations boolean maps to a permission mode', () => {
+test('confirmMutations supplies the fallback permission mode', () => {
   assert.equal(resolvePermissionMode({}), 'read-only');
   assert.equal(resolvePermissionMode({ confirmMutations: false }), 'allow-all');
   assert.equal(resolvePermissionMode({ confirmMutations: true }), 'read-only');

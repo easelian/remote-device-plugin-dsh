@@ -7,7 +7,7 @@
  *
  * The default output is `market/index.json` for npm and `market/index.git.json`
  * for a Git source. Existing versions in that output are preserved so the
- * market keeps older releases installable.
+ * market exposes every listed install target.
  */
 
 import { execFileSync } from 'node:child_process';
@@ -25,8 +25,8 @@ import { packageManifest, parseJson, record } from './json.mjs';
 
 const ROOT = new URL('../', import.meta.url);
 const PACKAGE_PATH = new URL('package.json', ROOT);
-const ICON_PATH = new URL('assets/icon.png', ROOT);
-const DEFAULT_GIT_URL = 'https://github.com/be-one-click/remote-device-plugin-dsh.git';
+const ICON_PATH = new URL('assets/icon.svg', ROOT);
+const DEFAULT_GIT_URL = 'https://github.com/easelian/remote-device-plugin-dsh.git';
 
 interface Options {
   source?: string;
@@ -93,10 +93,10 @@ function validCommit(commit: string): boolean {
 function dataIcon(bytes: Buffer): string {
   if (bytes.byteLength > MAX_INLINE_ICON_BYTES) {
     throw new Error(
-      `assets/icon.png is ${bytes.byteLength} bytes; inline market icons are limited to ${MAX_INLINE_ICON_BYTES}`,
+      `assets/icon.svg is ${bytes.byteLength} bytes; inline market icons are limited to ${MAX_INLINE_ICON_BYTES}`,
     );
   }
-  return `data:image/png;base64,${bytes.toString('base64')}`;
+  return `data:image/svg+xml;base64,${bytes.toString('base64')}`;
 }
 
 function currentVersion(pkg: ReturnType<typeof packageManifest>, options: Options): string {

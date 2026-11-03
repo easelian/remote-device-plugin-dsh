@@ -4,7 +4,7 @@ This repository supports all four distribution channels below. The plugin code
 and the user experience are the same; each user installs exactly one channel in
 a profile.
 
-## 1. Private GitHub repository (current)
+## 1. Private GitHub repository
 
 Best for an internal team or a closed beta.
 
@@ -18,10 +18,10 @@ Best for an internal team or a closed beta.
 3. The user installs this exact spec from **Plugins**:
 
    ```text
-   git+ssh://git@github.com/be-one-click/remote-device-plugin-dsh.git
+   git+ssh://git@github.com/easelian/remote-device-plugin-dsh.git
    ```
 
-   `plugin_manager` records it as `github:be-one-click/remote-device-plugin-dsh`
+   `plugin_manager` records it as `github:easelian/remote-device-plugin-dsh`
    in the profile and `pnpm` fetches the current commit.
 
 ### Updating a private Git install
@@ -36,7 +36,7 @@ again can therefore keep the old commit. To update:
 For reproducible installs, publish a tag and use a ref:
 
 ```text
-git+ssh://git@github.com/be-one-click/remote-device-plugin-dsh.git#v0.3.2
+git+ssh://git@github.com/easelian/remote-device-plugin-dsh.git#v0.3.10
 ```
 
 ## 2. Public GitHub repository
@@ -47,11 +47,11 @@ Best when the source can be public and you do not want to run a registry.
 2. Users install the HTTPS spec, which needs no SSH key:
 
    ```text
-   git+https://github.com/be-one-click/remote-device-plugin-dsh.git
+   git+https://github.com/easelian/remote-device-plugin-dsh.git
    ```
 
    Pinning a tag is recommended:
-   `git+https://github.com/be-one-click/remote-device-plugin-dsh.git#v0.3.2`.
+   `git+https://github.com/easelian/remote-device-plugin-dsh.git#v0.3.10`.
 
 The repository still contains no secrets: the OAuth token is created per user
 and stored under `~/.mcp-auth/` on the user's machine.
@@ -62,7 +62,7 @@ Best for public or organization-wide distribution without Git access.
 
 ### Manifest status
 
-The manifest is already prepared for publishing:
+The package manifest declares:
 
 - `private` is not set;
 - `repository`, `homepage`, `bugs`, and `author` are present;
@@ -70,15 +70,7 @@ The manifest is already prepared for publishing:
 - `files` includes the runtime, locales, icon, docs, skill, and market index;
 - `mcp-remote` remains a runtime dependency.
 
-The package is marked `UNLICENSED`. Publishing to the public npm registry makes
-the tarball publicly downloadable even though no open-source rights are granted.
-Choose another license only if that is the intended distribution. For a
-proprietary distribution, use a private registry instead of the public one.
-
-The unscoped name `dsh-remote-device-hub` is currently available on npm. A
-scoped name such as `@xdistribute/dsh-remote-device-hub` avoids collisions if
-the organization owns that scope; add `"publishConfig": { "access": "public" }`
-and `npm publish --access public` in that case.
+The package uses Apache-2.0 and includes the full `LICENSE` text. Publishing requires permission to publish `dsh-remote-device-hub` in the target registry. Check the package ownership and your account access before running the publish command.
 
 ### Publish
 
@@ -107,7 +99,7 @@ From **Plugins**, install the package name, optionally with an exact version:
 
 ```text
 dsh-remote-device-hub
-dsh-remote-device-hub@0.3.2
+dsh-remote-device-hub@0.3.10
 ```
 
 The plugin manager resolves it through the user's configured registry, checks
@@ -125,8 +117,8 @@ JSON document in format 1. It is display and install metadata only; the
 installed package manifest remains authoritative.
 
 This repository includes a generated, validated index at
-[`market/index.json`](../market/index.json). It lists the current npm release,
-uses an inline PNG data URI for the icon, and is checked by the official
+[`market/index.json`](../market/index.json). It describes the package version in `package.json`,
+uses an inline SVG data URI for the icon, and is checked by the official
 `@deepseek-ai/dsh-plugin-market-index` parser in `npm run validate`.
 
 ### Generate or update the index
@@ -135,7 +127,7 @@ uses an inline PNG data URI for the icon, and is checked by the official
 npm run market
 ```
 
-The generator reads `package.json`, preserves older versions already present in
+The generator reads `package.json`, preserves the version entries already present in
 the output, rejects an invalid document before writing, and keeps the icon
 inside the format's 32 KiB inline limit. Run it after every version bump, before
 committing and publishing.
@@ -146,7 +138,7 @@ The index is included in the npm package (`files` contains `market/*.json`), so
 a CDN that serves npm packages can host it without a separate site:
 
 ```text
-https://cdn.jsdelivr.net/npm/dsh-remote-device-hub@0.3.2/market/index.json
+https://cdn.jsdelivr.net/npm/dsh-remote-device-hub@0.3.10/market/index.json
 ```
 
 The version-less URL
@@ -154,9 +146,7 @@ The version-less URL
 the latest published version, at the cost of CDN caching. Pinning a version is
 more reproducible. GitHub Pages or another public HTTPS host also works.
 
-The market reader refuses redirects and credentials. A raw GitHub URL redirects,
-and a private GitHub repository cannot be fetched by other users' market
-readers, so use the published npm package, Pages, or a public CDN.
+The market reader refuses redirects and credentials. Serve the index from a URL that returns JSON directly. A private repository requires access that public market readers do not have; a published npm package, Pages, or public CDN can provide the index.
 
 ### Optional Git index
 

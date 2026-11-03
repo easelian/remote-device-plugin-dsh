@@ -75,7 +75,7 @@ test('the compiled browser entry loads through the DSH loader and registers both
   assert.equal(render({ form: { state: { status: 'unavailable' } } }).children[0], 'unavailable');
 });
 
-test('all permission modes and the legacy boolean select the expected radio', () => {
+test('all permission modes and the boolean fallback select the expected radio', () => {
   const { render } = harness();
   for (const mode of ['always-ask', 'read-only', 'low-risk', 'allow-all']) {
     const tree = render({

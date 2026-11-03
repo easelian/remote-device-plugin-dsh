@@ -35,7 +35,7 @@ const required = [
     'bin/config.mjs',
     'locale/en.json',
     'locale/zh.json',
-    'assets/icon.png',
+    'assets/icon.svg',
     'skills/remote-device-hub/SKILL.md',
     'skills/remote-device-hub/references/files.md',
     'skills/remote-device-hub/references/processes.md',
@@ -83,9 +83,9 @@ for (const locale of ['en', 'zh']) {
     check(meta.title === 'Remote Device Hub', `${locale}.json needs meta.title`);
     check(typeof meta.description === 'string' && meta.description.length > 20, `${locale}.json needs a meaningful meta.description`);
 }
-const icon = await readFile(new URL('assets/icon.png', root));
-check(icon.subarray(0, 8).toString('hex') === '89504e470d0a1a0a', 'assets/icon.png is not a PNG');
-check(icon.byteLength <= 256 * 1024, 'assets/icon.png exceeds the 256 KiB plugin icon limit');
+const icon = await readFile(new URL('assets/icon.svg', root));
+check(/<svg\b[^>]*\bxmlns="http:\/\/www\.w3\.org\/2000\/svg"/u.test(icon.toString('utf8')), 'assets/icon.svg is not an SVG');
+check(icon.byteLength < 10_000, 'assets/icon.svg must be below 10000 bytes');
 const skill = await read('skills/remote-device-hub/SKILL.md');
 check(/^---\nname: remote-device-hub\n/u.test(skill), 'skill frontmatter name is missing');
 check(/^description: .{40,}$/mu.test(skill), 'skill frontmatter description is missing or too short');

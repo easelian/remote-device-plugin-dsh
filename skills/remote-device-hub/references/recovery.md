@@ -26,7 +26,7 @@
 - Unsupported extended tool: use a supported equivalent only if it preserves
   the same permissions and semantics. Do not substitute shell for a denied read
   or write.
-- `payment_required`: this legacy error code means the current account
+- `payment_required`: this error code means the current account
   allowance does not permit the operation. Stop retrying. `get_billing_status`
   is free and may report existing entitlement and remaining allowance. Explain
   those facts without promoting upgrades, presenting subscription plans,

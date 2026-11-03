@@ -1,6 +1,6 @@
 {
   "name": "dsh-remote-device-hub",
-  "version": "0.3.2",
+  "version": "0.3.10",
   "description": "Connect authorized Linux and macOS devices to DeepSeek Harness through Remote Device Hub MCP.",
   "type": "module",
   "main": "index.js",
@@ -10,12 +10,12 @@
     "./launcher": "./bin/launcher.mjs",
     "./package.json": "./package.json",
     "./locale/*.json": "./locale/*.json",
-    "./icon": "./assets/icon.png"
+    "./icon": "./assets/icon.svg"
   },
   "bin": {
     "dsh-remote-device-hub-mcp": "./bin/launcher.mjs"
   },
-  "icon": "./assets/icon.png",
+  "icon": "./assets/icon.svg",
   "files": [
     "index.js",
     "permissions.js",
@@ -23,7 +23,7 @@
     "bin/*.mjs",
     "cordis.patch.yml",
     "locale/*.json",
-    "assets/*.png",
+    "assets/*.svg",
     "skills/**",
     "docs/*.md",
     "market/*.json",
@@ -39,18 +39,18 @@
     "remote-device-hub",
     "remote-development"
   ],
-  "license": "UNLICENSED",
+  "license": "Apache-2.0",
   "author": {
-    "name": "Hongfei Shang",
-    "email": "shfwin6@gmail.com"
+    "name": "EaseLian",
+    "email": "easeliannet@gmail.com"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/be-one-click/remote-device-plugin-dsh.git"
+    "url": "git+https://github.com/easelian/remote-device-plugin-dsh.git"
   },
-  "homepage": "https://github.com/be-one-click/remote-device-plugin-dsh#readme",
+  "homepage": "https://rdh.easelian.com",
   "bugs": {
-    "url": "https://github.com/be-one-click/remote-device-plugin-dsh/issues"
+    "url": "https://github.com/easelian/remote-device-plugin-dsh/issues"
   },
   "engines": {
     "dsh": ">=0.2.0",

@@ -7,7 +7,7 @@
  *
  * The default output is `market/index.json` for npm and `market/index.git.json`
  * for a Git source. Existing versions in that output are preserved so the
- * market keeps older releases installable.
+ * market exposes every listed install target.
  */
 import { execFileSync } from 'node:child_process';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
@@ -18,8 +18,8 @@ import { rcompare } from 'semver';
 import { packageManifest, parseJson, record } from './json.mjs';
 const ROOT = new URL('../', import.meta.url);
 const PACKAGE_PATH = new URL('package.json', ROOT);
-const ICON_PATH = new URL('assets/icon.png', ROOT);
-const DEFAULT_GIT_URL = 'https://github.com/be-one-click/remote-device-plugin-dsh.git';
+const ICON_PATH = new URL('assets/icon.svg', ROOT);
+const DEFAULT_GIT_URL = 'https://github.com/easelian/remote-device-plugin-dsh.git';
 export function parseArgs(argv) {
     const options = {};
     for (let index = 0; index < argv.length; index += 1) {
@@ -67,9 +67,9 @@ function validCommit(commit) {
 }
 function dataIcon(bytes) {
     if (bytes.byteLength > MAX_INLINE_ICON_BYTES) {
-        throw new Error(`assets/icon.png is ${bytes.byteLength} bytes; inline market icons are limited to ${MAX_INLINE_ICON_BYTES}`);
+        throw new Error(`assets/icon.svg is ${bytes.byteLength} bytes; inline market icons are limited to ${MAX_INLINE_ICON_BYTES}`);
     }
-    return `data:image/png;base64,${bytes.toString('base64')}`;
+    return `data:image/svg+xml;base64,${bytes.toString('base64')}`;
 }
 function currentVersion(pkg, options) {
     const version = options.version ?? pkg.version;

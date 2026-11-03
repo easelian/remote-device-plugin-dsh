@@ -56,10 +56,14 @@ test('locale resources carry display metadata', async () => {
   }
 });
 
-test('the icon is a small valid PNG', async () => {
-  const icon = await readBytes('../assets/icon.png');
-  assert.equal(icon.subarray(0, 8).toString('hex'), '89504e470d0a1a0a');
-  assert.ok(icon.byteLength <= 256 * 1024);
+test('the manifest and package export reference the bundled SVG icon', async () => {
+  const manifest = JSON.parse(await read('../package.json'));
+  assert.equal(manifest.icon, './assets/icon.svg');
+  assert.equal(manifest.exports['./icon'], manifest.icon);
+  assert.ok(manifest.files.includes('assets/*.svg'));
+  const icon = await readBytes('../assets/icon.svg');
+  assert.match(icon.toString('utf8'), /<svg\b[^>]*viewBox="0 0 256 256"/u);
+  assert.ok(icon.byteLength < 10_000);
 });
 
 test('the bundled skill has valid frontmatter', async () => {

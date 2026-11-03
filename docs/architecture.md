@@ -87,12 +87,12 @@ approval service is present. Inside the namespace, `permissionMode` decides:
 Every other call returns `{ kind: 'ask', reason, displayReason }`. The tool
 runtime resolves `ask` through the approval service (`ctx.get('approval')`);
 only `allowed-once` proceeds, and the decision is audited. The gate is
-deliberately conservative: a future Agent tool that is not in the selected
+deliberately conservative: an Agent tool outside the selected
 allowed set prompts rather than running silently.
 
 `permissionMode` is a volatile field of the Host row's `Config`. The Plugins row
 page renders four radio options into `plugins.row.config` under the key
-`dsh-remote-device-hub#remote-device-hub`. The legacy `confirmMutations: false`
+`dsh-remote-device-hub#remote-device-hub`. The `confirmMutations: false` setting
 maps to `allow-all` only when `permissionMode` is absent.
 
 This gate is defense in depth, not the authority boundary. The Hub enforces the
@@ -134,7 +134,7 @@ apply through HMR.
 
 `package.json` declares `engines.dsh >= 0.2.0`. The plugin manager rejects an
 install when the running DSH does not satisfy that requirement. The runtime dependencies are `mcp-remote` and `@deepseek-ai/schemastery`.
-TypeScript sources under `src/` compile to the existing ESM entrypoints, which
+TypeScript sources under `src/` compile to ESM entrypoints, which
 are committed for Git distribution. npm consumers receive those precompiled
 files; the compiler and React/Node type declarations are development-only.
 The package declares no `install`, `postinstall`, or `prepare` hook.

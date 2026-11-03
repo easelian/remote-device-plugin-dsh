@@ -76,11 +76,11 @@ Do not delete the whole `~/.mcp-auth` directory if other tools use
 `mcp-remote`; delete only this endpoint's files, or revoke the connection in
 Remote Device Hub account settings.
 
-## An old `mcp-xdistribute` row still exists
+## Duplicate MCP bridges for the same Hub
 
 Two bridges for the same URL share one `mcp-remote` client cache. If their
 callback ports differ, each deletes the other's cached client registration on
-startup, and refresh can fail. Disable or remove the old hand-written row and
+startup, and refresh can fail. Disable or remove duplicate MCP rows and
 keep this bundle as the only Remote Device Hub MCP entry in the profile.
 
 ## Approval prompts do not appear
@@ -97,7 +97,7 @@ that requires approval.
 
 ## The install fails while contacting GitHub
 
-The repository is private. Confirm that the SSH key configured for `github.com`
+For a private Git repository, confirm that the SSH key configured for `github.com`
 has access, and that `git ls-remote` works for the repository from the machine
 running DSH. The plugin manager performs this check before `pnpm` starts. HTTPS
 specs need a token or credential helper; an SSH spec is usually simpler.

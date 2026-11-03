@@ -19,7 +19,7 @@ prompt confirms one exact call, not a blanket grant.
    Never invent a device ID or substitute another device because one is offline.
 2. Call `device_info` for that device. Use the returned root names, capabilities,
    `allow_write`, `allow_shell`, and process limits. Check extended-operation
-   support before using an extended tool; older Agents may lack those tools.
+   support before using an extended tool; the device must advertise those tools.
 3. Use POSIX paths relative to a returned named root. File tools enforce their
    configured roots. Shell commands execute with the Agent OS user's authority;
    their starting directory does not provide a shell sandbox.

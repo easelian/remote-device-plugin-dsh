@@ -1,8 +1,10 @@
 # Remote Device Hub for DeepSeek Harness
 
+![EaseLian](assets/icon.svg)
+
 [English](README.md)
 
-这是一个 DeepSeek Harness 组合包（bundle），通过
+这是 EaseLian 提供的 DeepSeek Harness 组合包（bundle），通过
 Remote Device Hub 连接你已授权的 Linux 和
 macOS 设备。它提供：
 
@@ -31,7 +33,7 @@ macOS 设备。它提供：
 2. 选择从 Git 安装 bundle，填入：
 
    ```text
-   git+ssh://git@github.com/be-one-click/remote-device-plugin-dsh.git
+   git+ssh://git@github.com/easelian/remote-device-plugin-dsh.git
    ```
 
 3. 保持 bundle 启用。插件管理器会把它写入当前 profile；开启 HMR 时无需重启
@@ -39,7 +41,7 @@ macOS 设备。它提供：
 
 ### 让 Agent 安装
 
-> 从 `git+ssh://git@github.com/be-one-click/remote-device-plugin-dsh.git`
+> 从 `git+ssh://git@github.com/easelian/remote-device-plugin-dsh.git`
 > 安装 DSH 插件。
 
 Agent 会调用 `plugin_manager` 的 `install_bundle`，`target` 传入同一个 Git
@@ -51,16 +53,16 @@ Agent 会调用 `plugin_manager` 的 `install_bundle`，`target` 传入同一个
 
 | 渠道 | 安装目标 |
 |---|---|
-| 私有 Git（SSH） | `git+ssh://git@github.com/be-one-click/remote-device-plugin-dsh.git` |
-| 公开 Git（HTTPS） | `git+https://github.com/be-one-click/remote-device-plugin-dsh.git` |
-| npm | `dsh-remote-device-hub` 或 `dsh-remote-device-hub@0.3.2` |
+| 私有 Git（SSH） | `git+ssh://git@github.com/easelian/remote-device-plugin-dsh.git` |
+| 公开 Git（HTTPS） | `git+https://github.com/easelian/remote-device-plugin-dsh.git` |
+| npm | `dsh-remote-device-hub` 或 `dsh-remote-device-hub@0.3.10` |
 | 市场索引 | 添加索引 URL 后从 Discover 安装 |
 
 npm 渠道需要先发布包（见 [docs/publishing.md](docs/publishing.md)）。市场索引由
 `npm run market` 生成；npm 发布后可直接使用：
 
 ```text
-https://cdn.jsdelivr.net/npm/dsh-remote-device-hub@0.3.2/market/index.json
+https://cdn.jsdelivr.net/npm/dsh-remote-device-hub@0.3.10/market/index.json
 ```
 
 把该 URL 添加为市场索引源，然后在 Discover 中安装 **Remote Device Hub**。
@@ -106,7 +108,7 @@ Host 部分还实现了四种权限级别。所选级别决定哪些工具在有
 | `always-ask` | 读取和所有修改前都询问。 |
 | `read-only` | 放行读取；任何修改前询问。 |
 | `low-risk` | 放行读取、创建新文件或目录（`write_file` 的 `expected_sha256` 为空）、`stop_search`；覆盖写入、移动、shell 命令和进程控制仍询问。 |
-| `allow-all` | 不再询问。 |
+| `allow-all` | 所有工具均无需确认。 |
 
 只读集合为：
 
@@ -148,7 +150,7 @@ list_searches, get_search_results, read_process, list_processes
 |---|---|---|
 | `serverName` | `remote-device-hub` | MCP 工具命名空间，也是审批网关使用的前缀。MCP 行和 Host 行必须保持一致。 |
 | `permissionMode` | `read-only` | `always-ask`、`read-only`、`low-risk` 或 `allow-all`。插件行页面也提供同一字段。 |
-| `confirmMutations` | `true` | 兼容旧 profile 的布尔值。只有未设置 `permissionMode` 时，`false` 才映射为 `allow-all`。 |
+| `confirmMutations` | `true` | 未设置 `permissionMode` 时使用的布尔值；`false` 对应 `allow-all`。 |
 | `RDH_OAUTH_PORT` | `3335` | 首选的 loopback 回调端口。`off` 或 `0` 表示让 `mcp-remote` 自行推导端口。端口被占用时，本次运行会退回推导端口。 |
 | `RDH_MCP_URL` | 发布配置中的 MCP 地址 | 覆盖 endpoint，例如 `https://hub.example.test/mcp`。 |
 | `RDH_DIRECT_ORIGIN` | 不启用 | 同一 Hub 的可选直连 origin。只有显式设置才会改写服务端请求；`off` 或空字符串禁用。 |
@@ -179,7 +181,7 @@ bundle 为它的 Host 行提供了一个配置控件。打开侧边栏 **插件 
   ( ) 允许全部工具
 ```
 
-选择后通过 DSH Settings 写入 `permissionMode`，不再需要手改 profile YAML。
+选择后通过 DSH Settings 写入 `permissionMode`，也可通过 profile YAML 配置该字段。
 
 控件注册在 `plugins.row.config`，key 为
 `dsh-remote-device-hub#remote-device-hub`。`permissionMode` 是 Host 行
@@ -218,7 +220,7 @@ Host 部分（`index.js`）不导入任何 DSH 包。存在 `ctx.skills` 时注�
   再删除文件名以 endpoint URL 的 MD5 开头的文件（默认 URL 为
   `095db0f76015a5dc9e2dd8f20e97f440`）。
 
-同一 profile 中不要再保留手写的、指向同一 URL 的 `mcp-xdistribute` 行。两个桥接
+同一 profile 中的一个 Hub URL 只配置一个 MCP 桥接。两个桥接
 共用一份 OAuth 客户端缓存，回调端口不同时会互相使对方的 client registration
 失效。
 
@@ -240,16 +242,20 @@ npm run check
 npm run pack:check
 ```
 
-在 `src/` 下修改 TypeScript 源码。`npm run build` 生成现有的 `index.js`、
+在 `src/` 下修改 TypeScript 源码。`npm run build` 生成 `index.js`、
 `client.js`、`permissions.js`、`bin/*.mjs` 和 `scripts/*.mjs` 入口。为支持 Git 分发，生成文件也
 保留在版本控制中，CI 会检查它们与源码是否一致；请勿直接修改生成文件。浏览器
-入口继续使用 DSH 模块加载器和宿主提供的 React。
+入口使用 DSH 模块加载器和宿主提供的 React。
 
 两份编译配置均启用 `strict`、`noUncheckedIndexedAccess` 和
 `exactOptionalPropertyTypes`。npm 包只携带预编译 ESM 和资源，TypeScript 及
 类型声明仅作为开发依赖，使用者无需 TypeScript 运行时。测试覆盖审批模式、
 设置更新、OAuth 路由与不重放行为、技能提供者及 launcher 行为。
 
+## 品牌资源
+
+插件和市场索引均使用 [Remote Device Hub 通用产品图标](https://github.com/easelian/brand/blob/main/products/remote-device-hub/icons/remote-device-hub.svg)。图标由深灰底板和浅白色显示器、锁与双齿短钥匙组成，只使用两种纯色；显示器右上方留有开口。浅色和深色界面使用同一张图标，无需平台提供两套图标字段。随包 SVG 为 `assets/icon.svg`，发布者为 EaseLian。
+
 ## 许可证
 
-UNLICENSED。本仓库为私有仓库，不发布到包注册表。
+采用 Apache License 2.0，完整文本见 [LICENSE](LICENSE)。

@@ -36,8 +36,8 @@ function isPermissionMode(value) {
 const DEFAULT_PERMISSION_MODE = 'read-only';
 /**
  * Row configuration. `permissionMode` is volatile, so DSH Settings can expose
- * it as the row's form field. `confirmMutations` is the legacy boolean kept for
- * profiles written before the permission levels existed.
+ * it as the row's form field. `confirmMutations` supplies the fallback when
+ * `permissionMode` is absent.
  */
 export const Config = z.object({
     serverName: z.string().default('remote-device-hub'),
@@ -46,7 +46,7 @@ export const Config = z.object({
 });
 /**
  * Remote Device Hub tools that only read device or account state. Every other
- * tool, including tools added by future Agents, is treated as a mutation and
+ * tool, including tools outside this list, is treated as a mutation and
  * goes through the approval gate.
  */
 export const READ_ONLY_TOOLS = new Set([
@@ -75,7 +75,7 @@ export const LOW_RISK_TOOLS = new Set([...READ_ONLY_TOOLS, 'make_directory', 'st
 function configValue(value) {
     return isRecord(value) && typeof value.get === 'function' ? value.get() : value;
 }
-/** Resolve the effective permission mode, including the legacy boolean. */
+/** Resolve the effective permission mode, using `confirmMutations` as the fallback. */
 export function resolvePermissionMode(config = {}) {
     const mode = configValue(config.permissionMode);
     if (isPermissionMode(mode)) {
@@ -169,7 +169,7 @@ export function mutationDecision(execution, options = {}) {
 /**
  * Register the skill (when available) and the mutation approval gate.
  * @param ctx - Cordis context.
- * @param config - Row config: `serverName`, `permissionMode`, and the legacy
+ * @param config - Row config: `serverName`, `permissionMode`, and
  * `confirmMutations`.
  */
 export function apply(ctx, config = {}) {
