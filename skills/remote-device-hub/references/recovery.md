@@ -1,5 +1,22 @@
 # Failure recovery and account allowance
 
+For an authorized change, if the device advertises operation receipts and the
+host exposes `prepare_operation`, reserve an ID for a supported operation and
+pass the returned `operation_id` to that change. Never invent an ID or use an
+expired one. This is optional when the device or routing does not support it.
+After a timeout or disconnect, use `get_operation_status` with the original
+device and operation ID, or inspect `list_operations` when the returned ID was
+lost. Correlate a listed receipt before attributing it to the attempted change.
+These queries do not repeat the operation, and their summaries may not contain
+file content or process output.
+
+For an ordinary device call without an operation receipt, use `get_call_status`
+with its `support_id`, or inspect `list_calls` when that ID was lost, if those
+tools are available. These queries also do not execute the original call.
+Device-scoped call history does not cover `list_devices`; use its support ID in
+the account activity view instead. An `unknown` outcome remains uncertain:
+inspect the actual device state before considering a new change.
+
 - Authentication failure: ask the user to reconnect through the host. In
   DeepSeek Harness the bundle starts browser sign-in through its OAuth bridge;
   if no browser opens, ask the user to restart the plugin and check the Harness

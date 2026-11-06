@@ -42,10 +42,12 @@ login failed. Two common causes:
 1. **OAuth discovery or token exchange times out.** Check:
 
    ```bash
-   curl -m 10 https://rdh.easelian.com/.well-known/oauth-authorization-server
+   curl -m 10 https://rdh.easelian.com/.well-known/oauth-protected-resource/mcp
+   curl -m 10 https://auth.easelian.com/.well-known/oauth-authorization-server
    ```
 
-   For a self-hosted Hub, use its configured OAuth origin instead. Direct
+   For a self-hosted Hub, query its MCP resource metadata and use the listed
+   authorization server for the second request. Direct
    transport is disabled by default. If the deployment provides a separate
    direct origin serving the same Hub, set `RDH_DIRECT_ORIGIN` explicitly in
    the MCP row's environment. It receives the server-side OAuth and MCP

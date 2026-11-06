@@ -76,10 +76,27 @@ test('the skill is skipped when the profile has no skill registry', () => {
 test('read-only tools pass through the approval gate', async () => {
   const { gate } = createHarness();
   assert.ok(gate);
-  for (const tool of ['list_devices', 'read_file', 'list_processes']) {
+  for (const tool of [
+    'list_devices',
+    'read_file',
+    'list_processes',
+    'get_call_status',
+    'list_calls',
+    'get_operation_status',
+    'list_operations',
+  ]) {
     const decision = await gate({ name: `mcp__remote-device-hub__${tool}`, args: {} }, next);
     assert.equal(decision, 'next');
   }
+});
+
+test('preparing an operation remains subject to approval', async () => {
+  const { gate } = createHarness({ permissionMode: 'read-only' });
+  const decision = await gate(
+    { name: 'mcp__remote-device-hub__prepare_operation', args: { device_id: 'device' } },
+    next,
+  );
+  assert.equal(decision.kind, 'ask');
 });
 
 test('device mutations ask for approval', async () => {

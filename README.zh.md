@@ -55,24 +55,30 @@ Agent 会调用 `plugin_manager` 的 `install_bundle`，`target` 传入同一个
 |---|---|
 | 私有 Git（SSH） | `git+ssh://git@github.com/easelian/remote-device-plugin-dsh.git` |
 | 公开 Git（HTTPS） | `git+https://github.com/easelian/remote-device-plugin-dsh.git` |
-| npm | `dsh-remote-device-hub` 或 `dsh-remote-device-hub@0.3.10` |
+| npm | `dsh-remote-device-hub` 或 `dsh-remote-device-hub@0.3.11` |
 | 市场索引 | 添加索引 URL 后从 Discover 安装 |
 
 npm 渠道需要先发布包（见 [docs/publishing.md](docs/publishing.md)）。市场索引由
 `npm run market` 生成；npm 发布后可直接使用：
 
 ```text
-https://cdn.jsdelivr.net/npm/dsh-remote-device-hub@0.3.10/market/index.json
+https://cdn.jsdelivr.net/npm/dsh-remote-device-hub@0.3.11/market/index.json
 ```
 
 把该 URL 添加为市场索引源，然后在 Discover 中安装 **Remote Device Hub**。
 
 ### 首次连接
 
-bundle 通过 stdio 启动 OAuth 桥接。首次连接时，桥接会在浏览器打开 Remote
+bundle 通过 stdio 启动 OAuth 桥接。桥接从 MCP 资源元数据发现认证服务，
+支持认证服务与 MCP 使用不同的 origin。首次连接时，桥接会在浏览器打开 Remote
 Device Hub 授权页，申请 `devices:control` scope。请用拥有目标设备的账号登录。
 访问令牌和刷新令牌由 `mcp-remote` 保存在
 `~/.mcp-auth/mcp-remote-v1/`，不会写入仓库或 profile 配置。
+
+令牌刷新由 `mcp-remote` 处理，不使用 Hub 的刷新结果恢复接口。如果刷新响应
+丢失，可能需要重新登录；不要手动重放已保存的刷新令牌。
+如果认证服务的 issuer 发生变化，先停止桥接，按下方升级和移除章节仅清理该 MCP
+入口的客户端和令牌缓存，再重新登录。
 
 连接成功后工具才会出现：
 
@@ -115,7 +121,8 @@ Host 部分还实现了四种权限级别。所选级别决定哪些工具在有
 ```text
 list_devices, get_billing_status, device_info, list_directory, read_file,
 read_file_chunk, read_multiple_files, search_files, file_info, start_search,
-list_searches, get_search_results, read_process, list_processes
+list_searches, get_search_results, get_call_status, list_calls,
+get_operation_status, list_operations, read_process, list_processes
 ```
 
 该批准只确认一次具体工具调用，不是设备内的权限授予：Hub 和设备 Agent 仍然
@@ -157,13 +164,17 @@ list_searches, get_search_results, read_process, list_processes
 | `RDH_PUBLIC_ORIGIN` | `RDH_MCP_URL` 的 origin | OAuth 公开 origin；只有与 MCP 入口不同且已确认属于同一 Hub 时才需设置。 |
 
 发布默认值位于生成文件 [src/bin/deployment-defaults.mts](src/bin/deployment-defaults.mts)，
-由 Server 仓库的 `scripts/sync-deployment.py` 根据 `deploy/config.json` 生成。
-自建 Hub 通常只需设置 `RDH_MCP_URL`，授权与连接都会使用该入口，不会退回官方域名。
+由 Server 仓库的 `tools/ops/sync-deployment.py` 根据
+`tools/ops/config/config.json` 生成。
+自建 Hub 通常只需设置 `RDH_MCP_URL`；桥接会从该 MCP 入口发现认证服务，
+不会退回官方域名。
 上面的 `hub.example.test` 是示例，使用前应替换成自己的地址。
 
 启用直连后，launcher 会改写指定 Hub 的 OAuth 服务端路径和 MCP endpoint；
 浏览器的 `/authorize` 仍使用公开入口。请求失败后不会自动重发到另一入口，
 因为超时不能证明刷新令牌或写操作尚未执行。
+如果 Auth 与 MCP 使用不同的公开 origin，只有直连入口同时提供两者的路由时，
+才将 `RDH_PUBLIC_ORIGIN` 设置为 Auth origin。
 
 OAuth 客户端注册与回调端口绑定，登录后再修改 `RDH_OAUTH_PORT` 可能需要重新登录。
 

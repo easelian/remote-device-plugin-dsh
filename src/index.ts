@@ -126,6 +126,10 @@ export const READ_ONLY_TOOLS = new Set([
   'start_search',
   'list_searches',
   'get_search_results',
+  'get_call_status',
+  'list_calls',
+  'get_operation_status',
+  'list_operations',
   'read_process',
   'list_processes',
 ]);
