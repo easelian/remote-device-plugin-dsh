@@ -1,11 +1,11 @@
 # Remote Device Hub for DeepSeek Harness
 
-![EaseLian](assets/icon.svg)
+![Easelian](assets/icon.svg)
 
 [中文](README.zh.md)
 
 A DeepSeek Harness bundle that connects your authorized Linux and macOS devices
-through [Remote Device Hub by EaseLian](https://rdh.easelian.com). It contributes:
+through [Remote Device Hub by Easelian](https://rdh.easelian.com). It contributes:
 
 - the Remote Device Hub MCP tools (`mcp__remote-device-hub__*`);
 - a `remote-device-hub` skill that explains safe device workflows;
@@ -294,7 +294,7 @@ updates, OAuth routing/fallback, the skill provider, and launcher behavior.
 
 ## Brand assets
 
-The plugin and market index use the [Remote Device Hub universal product icon](https://github.com/easelian/brand/blob/main/products/remote-device-hub/icons/remote-device-hub.svg). Its fixed charcoal badge and off-white desktop display, lock, and two-tooth key support light and dark surfaces with one icon field. The SVG is bundled as `assets/icon.svg`; EaseLian is the publisher.
+The plugin and market index use the [Remote Device Hub universal product icon](https://github.com/easelian/brand/blob/main/products/remote-device-hub/icons/remote-device-hub.svg). Its fixed charcoal badge and off-white desktop display, lock, and two-tooth key support light and dark surfaces with one icon field. The SVG is bundled as `assets/icon.svg`; Easelian is the publisher.
 
 ## License
 

@@ -1,10 +1,10 @@
 # Remote Device Hub for DeepSeek Harness
 
-![EaseLian](assets/icon.svg)
+![Easelian](assets/icon.svg)
 
 [English](README.md)
 
-这是 EaseLian 提供的 DeepSeek Harness 组合包（bundle），通过
+这是 Easelian 提供的 DeepSeek Harness 组合包（bundle），通过
 Remote Device Hub 连接你已授权的 Linux 和
 macOS 设备。它提供：
 
@@ -265,7 +265,7 @@ npm run pack:check
 
 ## 品牌资源
 
-插件和市场索引均使用 [Remote Device Hub 通用产品图标](https://github.com/easelian/brand/blob/main/products/remote-device-hub/icons/remote-device-hub.svg)。图标由深灰底板和浅白色显示器、锁与双齿短钥匙组成，只使用两种纯色；显示器右上方留有开口。浅色和深色界面使用同一张图标，无需平台提供两套图标字段。随包 SVG 为 `assets/icon.svg`，发布者为 EaseLian。
+插件和市场索引均使用 [Remote Device Hub 通用产品图标](https://github.com/easelian/brand/blob/main/products/remote-device-hub/icons/remote-device-hub.svg)。图标由深灰底板和浅白色显示器、锁与双齿短钥匙组成，只使用两种纯色；显示器右上方留有开口。浅色和深色界面使用同一张图标，无需平台提供两套图标字段。随包 SVG 为 `assets/icon.svg`，发布者为 Easelian。
 
 ## 许可证
 
