@@ -1,17 +1,9 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256" role="img" aria-labelledby="title">
   <title id="title">Remote Device Hub</title>
-  <g id="device" fill="none" stroke="#80858D" stroke-width="11" stroke-linecap="round" stroke-linejoin="round">
-    <path id="display" d="M157 62H61a25 25 0 0 0-25 25v74a25 25 0 0 0 25 25h127a25 25 0 0 0 25-25v-59"/>
-    <path id="stand" d="M127 186v30m-27 0h54"/>
-  </g>
-  <g id="key" fill="none" stroke="#0A84FF" stroke-linecap="round">
-    <circle id="key-ring" cx="209" cy="46" r="10" stroke-width="7.5"/>
-    <path id="key-blade" d="M201 54 173 82" stroke-width="6.5"/>
-    <path id="key-tooth-upper" d="M194 61l6.5 6.5" stroke-width="6"/>
-    <path id="key-tooth-lower" d="M185 70l6.5 6.5" stroke-width="6"/>
-  </g>
-  <g id="lock" fill="#0A84FF">
-    <path id="shackle" d="M111 115v-9a16 16 0 0 1 32 0v9" fill="none" stroke="#0A84FF" stroke-width="7.5"/>
-    <rect id="lock-body" x="98.5" y="115" width="57" height="44" rx="10"/>
+  <path id="device" d="M166 40H82a42 42 0 0 0-42 42v92a42 42 0 0 0 42 42h92a42 42 0 0 0 42-42V96"
+        fill="none" stroke="#0A84FF" stroke-width="26" stroke-linecap="round" stroke-linejoin="round"/>
+  <g id="connection" fill="#0A84FF">
+    <path id="reach" d="M128 130 208 50" fill="none" stroke="#0A84FF" stroke-width="26" stroke-linecap="round"/>
+    <circle id="hub" cx="128" cy="130" r="31"/>
   </g>
 </svg>
