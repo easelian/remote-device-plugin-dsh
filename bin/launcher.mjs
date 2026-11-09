@@ -42,7 +42,7 @@ export function buildProxyArgs({ proxyPath, url, port, transport = 'http-only', 
     if (port !== null && port !== undefined) {
         args.push(String(port));
     }
-    args.push('--transport', transport);
+    args.push('--transport', transport, '--static-oauth-client-metadata', JSON.stringify({ client_name: 'Remote Device Hub for DeepSeek Harness' }));
     if (new URL(endpoint).protocol === 'http:') {
         args.push('--allow-http');
     }

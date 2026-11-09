@@ -36,7 +36,7 @@ again can therefore keep the old commit. To update:
 For reproducible installs, publish a tag and use a ref:
 
 ```text
-git+ssh://git@github.com/easelian/remote-device-plugin-dsh.git#v0.3.11
+git+ssh://git@github.com/easelian/remote-device-plugin-dsh.git#v0.3.12
 ```
 
 ## 2. Public GitHub repository
@@ -51,7 +51,7 @@ Best when the source can be public and you do not want to run a registry.
    ```
 
    Pinning a tag is recommended:
-   `git+https://github.com/easelian/remote-device-plugin-dsh.git#v0.3.11`.
+   `git+https://github.com/easelian/remote-device-plugin-dsh.git#v0.3.12`.
 
 The repository still contains no secrets: the OAuth token is created per user
 and stored under `~/.mcp-auth/` on the user's machine.
@@ -99,7 +99,7 @@ From **Plugins**, install the package name, optionally with an exact version:
 
 ```text
 dsh-remote-device-hub
-dsh-remote-device-hub@0.3.11
+dsh-remote-device-hub@0.3.12
 ```
 
 The plugin manager resolves it through the user's configured registry, checks
@@ -138,7 +138,7 @@ The index is included in the npm package (`files` contains `market/*.json`), so
 a CDN that serves npm packages can host it without a separate site:
 
 ```text
-https://cdn.jsdelivr.net/npm/dsh-remote-device-hub@0.3.11/market/index.json
+https://cdn.jsdelivr.net/npm/dsh-remote-device-hub@0.3.12/market/index.json
 ```
 
 The version-less URL

@@ -45,6 +45,8 @@ test('buildProxyArgs passes the endpoint, port, and transport', () => {
     '3335',
     '--transport',
     'http-only',
+    '--static-oauth-client-metadata',
+    JSON.stringify({ client_name: 'Remote Device Hub for DeepSeek Harness' }),
   ]);
 });
 
@@ -54,7 +56,14 @@ test('buildProxyArgs omits the positional port when disabled', () => {
     url: 'https://example.test/mcp',
     port: null,
   });
-  assert.deepEqual(args, ['/tmp/proxy.js', 'https://example.test/mcp', '--transport', 'http-only']);
+  assert.deepEqual(args, [
+    '/tmp/proxy.js',
+    'https://example.test/mcp',
+    '--transport',
+    'http-only',
+    '--static-oauth-client-metadata',
+    JSON.stringify({ client_name: 'Remote Device Hub for DeepSeek Harness' }),
+  ]);
 });
 
 test('loopback HTTP is allowed explicitly, while remote HTTP cannot reach the proxy', () => {
@@ -65,6 +74,8 @@ test('loopback HTTP is allowed explicitly, while remote HTTP cannot reach the pr
       url,
       '--transport',
       'http-only',
+      '--static-oauth-client-metadata',
+      JSON.stringify({ client_name: 'Remote Device Hub for DeepSeek Harness' }),
       '--allow-http',
     ]);
   }

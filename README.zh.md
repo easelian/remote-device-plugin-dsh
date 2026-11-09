@@ -55,14 +55,14 @@ Agent 会调用 `plugin_manager` 的 `install_bundle`，`target` 传入同一个
 |---|---|
 | 私有 Git（SSH） | `git+ssh://git@github.com/easelian/remote-device-plugin-dsh.git` |
 | 公开 Git（HTTPS） | `git+https://github.com/easelian/remote-device-plugin-dsh.git` |
-| npm | `dsh-remote-device-hub` 或 `dsh-remote-device-hub@0.3.11` |
+| npm | `dsh-remote-device-hub` 或 `dsh-remote-device-hub@0.3.12` |
 | 市场索引 | 添加索引 URL 后从 Discover 安装 |
 
 npm 渠道需要先发布包（见 [docs/publishing.md](docs/publishing.md)）。市场索引由
 `npm run market` 生成；npm 发布后可直接使用：
 
 ```text
-https://cdn.jsdelivr.net/npm/dsh-remote-device-hub@0.3.11/market/index.json
+https://cdn.jsdelivr.net/npm/dsh-remote-device-hub@0.3.12/market/index.json
 ```
 
 把该 URL 添加为市场索引源，然后在 Discover 中安装 **Remote Device Hub**。
@@ -71,7 +71,10 @@ https://cdn.jsdelivr.net/npm/dsh-remote-device-hub@0.3.11/market/index.json
 
 bundle 通过 stdio 启动 OAuth 桥接。桥接从 MCP 资源元数据发现认证服务，
 支持认证服务与 MCP 使用不同的 origin。首次连接时，桥接会在浏览器打开 Remote
-Device Hub 授权页，申请 `devices:control` scope。请用拥有目标设备的账号登录。
+Device Hub 授权页，申请 `devices:control` scope。授权页会先说明申请方、
+为什么需要 Easelian 登录，以及连接允许执行的设备操作。点击“继续登录”后，
+使用拥有目标设备的账户登录，再确认该账户的访问授权；点击“取消”不会授予访问。
+浏览器由 OAuth 桥接打开，插件无法控制宿主在打开浏览器前是否显示确认提示。
 访问令牌和刷新令牌由 `mcp-remote` 保存在
 `~/.mcp-auth/mcp-remote-v1/`，不会写入仓库或 profile 配置。
 
