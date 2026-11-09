@@ -5,13 +5,11 @@
 [English](README.md)
 
 这是 Easelian 提供的 DeepSeek Harness 组合包（bundle），通过
-Remote Device Hub 连接你已授权的 Linux 和
-macOS 设备。它提供：
+Remote Device Hub 连接你已授权的设备。它提供：
 
 - Remote Device Hub MCP 工具（`mcp__remote-device-hub__*`）；
 - `remote-device-hub` 技能，说明安全的设备操作流程；
-- 在当前 profile 有审批通道时，对写文件、执行命令、控制进程等会更改设备的
-  工具先请求批准。
+- 当前 profile 有审批通道时，可设置哪些工具调用需要批准。
 
 它是 VS Code 和 Codex 版 Remote Device Hub 插件的 DSH 对应实现。运行时不需要
 系统安装 Node.js，桥接进程直接使用 DSH 自身的运行时。
@@ -21,6 +19,8 @@ macOS 设备。它提供：
 - DeepSeek Harness `0.2.0` 或更新版本。
 - 能访问任意一种分发渠道：私有 Git 仓库（SSH key，且 `github.com` 已加入
   `~/.ssh/known_hosts`）、公开 Git 仓库、npm 包，或已配置的插件市场索引。
+- 需要 RDH 账户。每台受控设备都须配对并运行 Agent。支持的系统和配对步骤见
+  [Agent 安装指南](https://github.com/easelian/remote-device-agent/blob/main/README-zhCN.md)。
 - 首次登录需要浏览器。
 - 允许在当前 DSH profile 安装插件。安装 bundle 会引入 Host 代码，插件管理器
   会要求 `danger-full-access` 批准。

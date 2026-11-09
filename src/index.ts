@@ -28,7 +28,7 @@ const SKILL_PATH = fileURLToPath(new URL('./SKILL.md', SKILL_DIRECTORY));
 const RESOURCE_BASE = { kind: 'directory', path: fileURLToPath(SKILL_DIRECTORY) };
 const INVOCATION = { modelInvocable: true, userInvocable: true };
 const DESCRIPTION =
-  'Manage Linux and macOS devices enrolled with Remote Device Hub. Use for device status, bounded file reads and edits, remote commands, and Agent-managed jobs after the user identifies the intended device and task.';
+  'Manage devices enrolled with Remote Device Hub. Use for device status, bounded file reads and edits, remote commands, and Agent-managed jobs after the user identifies the intended device and task.';
 const BUNDLED_SKILL_RANK = 600;
 
 interface RowConfig {

@@ -4,13 +4,13 @@
 
 [中文](README.zh.md)
 
-A DeepSeek Harness bundle that connects your authorized Linux and macOS devices
+A DeepSeek Harness bundle that connects your authorized devices
 through [Remote Device Hub by Easelian](https://rdh.easelian.com). It contributes:
 
 - the Remote Device Hub MCP tools (`mcp__remote-device-hub__*`);
 - a `remote-device-hub` skill that explains safe device workflows;
-- an approval gate before file writes, commands, process control, and other
-  device-mutating tools when the profile has an approval channel.
+- configurable approval prompts for tool calls when the profile has an approval
+  channel.
 
 It is the DSH counterpart of the VS Code and Codex Remote Device Hub plugins.
 No system Node.js is required: the bridge runs on the DSH runtime itself.
@@ -21,6 +21,9 @@ No system Node.js is required: the bridge runs on the DSH runtime itself.
 - Access to one distribution channel: the private Git repository (SSH key plus
   `github.com` in `~/.ssh/known_hosts`), the public Git repository, the npm
   package, or a configured plugin-market index.
+- An RDH account and a paired Agent running on each target device. See the
+  [Agent installation guide](https://github.com/easelian/remote-device-agent#install-and-run)
+  for supported platforms and pairing.
 - A browser for the first Remote Device Hub sign-in.
 - Permission to install a bundle in the current DSH profile. The plugin manager
   asks for `danger-full-access` approval, because bundles add Host code.

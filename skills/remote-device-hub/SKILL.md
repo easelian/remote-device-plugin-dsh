@@ -1,6 +1,6 @@
 ---
 name: remote-device-hub
-description: Manage Linux and macOS devices enrolled with Remote Device Hub. Use for device status, bounded file reads and edits, remote commands, and Agent-managed jobs after the user identifies the intended device and task.
+description: Manage devices enrolled with Remote Device Hub. Use for device status, bounded file reads and edits, remote commands, and Agent-managed jobs after the user identifies the intended device and task.
 ---
 
 # Remote Device Hub
@@ -8,9 +8,9 @@ description: Manage Linux and macOS devices enrolled with Remote Device Hub. Use
 Use the connected Remote Device Hub MCP tools for operations on an enrolled
 remote device. Follow the user's language. Discover the tools available in the
 current host; names below refer to MCP tool names, not a fixed host namespace.
-DeepSeek Harness exposes them as `mcp__remote-device-hub__<tool>`. When an
-approval channel is available, this bundle asks before a mutating call; that
-prompt confirms one exact call, not a blanket grant.
+DeepSeek Harness exposes them as `mcp__remote-device-hub__<tool>`. If the profile
+has an approval channel, its permission mode determines which tool calls prompt
+for approval. Each prompt applies to one tool call.
 
 ## Establish the device and authority
 

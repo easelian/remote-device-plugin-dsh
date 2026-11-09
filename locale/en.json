@@ -1,6 +1,6 @@
 {
   "meta": {
     "title": "Remote Device Hub",
-    "description": "Connect authorized Linux and macOS devices through Remote Device Hub MCP, with an operations skill and approval before device changes."
+    "description": "Use authorized devices through Remote Device Hub MCP. Tool approvals are configurable in profiles with an approval channel."
   }
 }

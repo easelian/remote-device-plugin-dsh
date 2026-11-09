@@ -202,8 +202,8 @@ async function main() {
         name: pkg.name,
         title: { en: 'Remote Device Hub', zh: 'Remote Device Hub' },
         description: {
-          en: 'Connect authorized Linux and macOS devices through MCP, with an operations skill and mutation approvals.',
-          zh: '通过 MCP 连接已授权的 Linux 和 macOS 设备，提供操作技能并在更改设备前请求批准。',
+          en: 'Use authorized devices through Remote Device Hub MCP. Tool approvals are configurable in profiles with an approval channel.',
+          zh: '通过 Remote Device Hub MCP 使用已授权的设备。当前配置有审批通道时，可设置哪些操作需要批准。',
         },
         icon,
         author: pkg.author,
