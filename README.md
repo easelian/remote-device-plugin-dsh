@@ -15,6 +15,8 @@ through [Remote Device Hub by Easelian](https://rdh.easelian.com). It contribute
 It is the DSH counterpart of the VS Code and Codex Remote Device Hub plugins.
 No system Node.js is required: the bridge runs on the DSH runtime itself.
 
+See [RDH terminology and service responsibilities](docs/terminology.md) for the shared product, Agent, authorization and execution concepts.
+
 ## Requirements
 
 - DeepSeek Harness `0.2.0` or newer.
