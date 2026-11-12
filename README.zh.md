@@ -14,6 +14,8 @@ Remote Device Hub 连接你已授权的设备。它提供：
 它是 VS Code 和 Codex 版 Remote Device Hub 插件的 DSH 对应实现。运行时不需要
 系统安装 Node.js，桥接进程直接使用 DSH 自身的运行时。
 
+共享概念见[RDH 统一术语](docs/terminology.md)，中文定义见 [Server 术语表](https://github.com/easelian/remote-device-server/blob/main/docs/terminology.md)。
+
 ## 前置条件
 
 - DeepSeek Harness `0.2.0` 或更新版本。
@@ -39,12 +41,12 @@ Remote Device Hub 连接你已授权的设备。它提供：
 3. 保持 bundle 启用。插件管理器会把它写入当前 profile；开启 HMR 时无需重启
    DSH 即可挂载。
 
-### 让 Agent 安装
+### 让 AI 助手安装
 
 > 从 `git+ssh://git@github.com/easelian/remote-device-plugin-dsh.git`
 > 安装 DSH 插件。
 
-Agent 会调用 `plugin_manager` 的 `install_bundle`，`target` 传入同一个 Git
+DSH 的 AI 助手会调用 `plugin_manager` 的 `install_bundle`，`target` 传入同一个 Git
 地址。请安装仓库根包，不要指向子目录。
 
 ### 其他安装渠道
@@ -230,7 +232,7 @@ Host 部分（`index.js`）不导入任何 DSH 包。存在 `ctx.skills` 时注�
 - **禁用**：在插件页关闭 bundle。MCP 连接和技能停止，但包仍保留。
 - **移除**：删除 bundle。本地 OAuth 令牌仍留在
   `~/.mcp-auth/mcp-remote-v1/`，重新安装时可以复用授权。要撤销授权，请使用
-  Remote Device Hub 账号设置；如只清理本 endpoint 的本地缓存，请先退出 DSH，
+  Remote Device Hub 账户设置；如只清理本 endpoint 的本地缓存，请先退出 DSH，
   再删除文件名以 endpoint URL 的 MD5 开头的文件（默认 URL 为
   `095db0f76015a5dc9e2dd8f20e97f440`）。
 
