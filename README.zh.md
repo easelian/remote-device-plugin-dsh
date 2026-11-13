@@ -77,8 +77,9 @@ Device Hub 授权页，申请 `devices:control` scope。授权页会先说明申
 为什么需要 Easelian 登录，以及连接允许执行的设备操作。点击“继续登录”后，
 使用拥有目标设备的账户登录，再确认该账户的访问授权；点击“取消”不会授予访问。
 浏览器由 OAuth 桥接打开，插件无法控制宿主在打开浏览器前是否显示确认提示。
-访问令牌和刷新令牌由 `mcp-remote` 保存在
-`~/.mcp-auth/mcp-remote-v1/`，不会写入仓库或 profile 配置。
+OAuth records are encrypted in `~/.mcp-auth/rdh-secure-v1/`; the system keyring
+holds the random encryption key. No plaintext fallback is allowed.
+See [credential storage](docs/credential-storage.md) for prerequisites and upgrades.
 
 令牌刷新由 `mcp-remote` 处理，不使用 Hub 的刷新结果恢复接口。如果刷新响应
 丢失，可能需要重新登录；不要手动重放已保存的刷新令牌。
@@ -230,7 +231,7 @@ Host 部分（`index.js`）不导入任何 DSH 包。存在 `ctx.skills` 时注�
   DSH；插件管理器会返回 `restart-required`。
 - **禁用**：在插件页关闭 bundle。MCP 连接和技能停止，但包仍保留。
 - **移除**：删除 bundle。本地 OAuth 令牌仍留在
-  `~/.mcp-auth/mcp-remote-v1/`，重新安装时可以复用授权。要撤销授权，请使用
+  `~/.mcp-auth/rdh-secure-v1/`，重新安装时可以复用授权。要撤销授权，请使用
   Remote Device Hub 账户设置；如只清理本 endpoint 的本地缓存，请先退出 DSH，
   再删除文件名以 endpoint URL 的 MD5 开头的文件（默认 URL 为
   `095db0f76015a5dc9e2dd8f20e97f440`）。

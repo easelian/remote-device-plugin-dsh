@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { spawnSync } from 'node:child_process';
 import { mkdtemp, rm, symlink } from 'node:fs/promises';
 import net from 'node:net';
 import { tmpdir } from 'node:os';
@@ -85,8 +86,8 @@ test('loopback HTTP is allowed explicitly, while remote HTTP cannot reach the pr
   );
 });
 
-test('resolveProxy points at the installed mcp-remote proxy', () => {
-  assert.match(resolveProxy(), /mcp-remote[\\/]dist[\\/]proxy\.js$/u);
+test('resolveProxy points only at the secure private bridge', () => {
+  assert.match(resolveProxy(), /bin[\\/]bridge[\\/]proxy\.js$/u);
 });
 
 test('isEntryPoint recognizes a symlinked profile installation', async () => {
@@ -119,4 +120,21 @@ test('isPortFree sees an available port and a bound port', async () => {
     await new Promise((resolve) => probe.close(resolve));
   }
   assert.equal(await isPortFree(port), true);
+});
+
+test('the private bridge rejects unsupported auth modes before storage or network access', () => {
+  for (const option of ['--device-code', '--client-credentials', '--header-file']) {
+    const result = spawnSync(
+      process.execPath,
+      [resolveProxy(), 'https://must-not-connect.invalid/mcp', option],
+      {
+        encoding: 'utf8',
+        timeout: 5000,
+      },
+    );
+    assert.equal(result.error, undefined);
+    assert.equal(result.status, 1);
+    assert.match(result.stderr, /Unsupported private bridge option/);
+    assert.equal(result.stdout, '');
+  }
 });

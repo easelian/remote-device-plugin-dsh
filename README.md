@@ -85,9 +85,10 @@ why Easelian sign-in is needed, and the device operations the connection permits
 Choose **Continue to sign in**, then sign in with the account that owns your
 devices and confirm access for that account. **Cancel** returns without granting
 access. The browser is opened by the OAuth bridge; the plugin does not control
-the host's pre-browser prompts. The access and refresh tokens are kept by `mcp-remote` under
-`~/.mcp-auth/mcp-remote-v1/`, outside this repository and outside the profile
-configuration.
+the host's pre-browser prompts. OAuth records are encrypted under `~/.mcp-auth/rdh-secure-v1/`. A random encryption
+key is held in the system keyring. Linux requires an unlocked Secret Service
+(such as GNOME Keyring or KWallet); macOS and Windows use their native credential
+services. There is no automatic plaintext fallback. See [credential storage](docs/credential-storage.md).
 
 The bridge delegates token refresh to `mcp-remote` and does not use the Hub's
 recoverable refresh extension. If a refresh response is lost, the grant may
@@ -259,7 +260,7 @@ details.
 - **Disable:** turn the bundle off in the Plugins page. The MCP connection and
   the skill stop; the package remains installed.
 - **Remove:** remove the bundle. Local OAuth tokens remain in
-  `~/.mcp-auth/mcp-remote-v1/` so a later reinstall can reuse the authorization.
+  `~/.mcp-auth/rdh-secure-v1/` as encrypted records so a later reinstall can reuse the authorization.
   To revoke the authorization, use Remote Device Hub account settings; to clear
   only this endpoint's local cache, quit DSH and remove the files whose name
   starts with the MD5 of the endpoint URL (`095db0f76015a5dc9e2dd8f20e97f440`
