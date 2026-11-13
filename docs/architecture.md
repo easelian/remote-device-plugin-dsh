@@ -18,34 +18,42 @@ on the public name prefix.
 ```text
 DSH stdio MCP transport
   → node/Electron (ELECTRON_RUN_AS_NODE=1) bin/launcher.mjs
-  → node/Electron bin/bridge/proxy.js
+      MCP SDK stdio server transport ⇄ MCP SDK Streamable HTTP client transport
   → HTTPS Streamable HTTP https://rdh.easelian.com/mcp
 ```
 
 DSH's MCP client supports stdio and Streamable HTTP with static headers. It has
 no OAuth flow, so a static `Authorization` header cannot survive the one-hour
-access-token lifetime or the rotating refresh token. `mcp-remote` owns:
+access-token lifetime or the rotating refresh token. The bridge is built on the
+official MCP SDK (`@modelcontextprotocol/sdk`), which owns:
 
 - protected-resource and authorization-server discovery;
-- dynamic client registration and PKCE;
-- the loopback callback server on `RDH_OAUTH_PORT` (default 3335);
-- access-token refresh and a single-use refresh-token lease;
-- the stdio↔HTTP translation the DSH client sees.
+- dynamic client registration, PKCE, the code exchange, and token refresh;
+- both transports, so the bridge only passes messages between them.
 
-The launcher uses the prebuilt private bridge, checks
-whether the preferred callback port is free, and spawns the proxy with
-`--transport http-only`. If the port is busy it omits the positional port and
-lets `mcp-remote` derive one, so a busy port is not fatal.
+The bridge adds what the SDK leaves to its host:
 
-The launcher also preloads [`bin/oauth-fetch.mjs`](../bin/oauth-fetch.mjs) with
-`node --import`. Direct transport is disabled by default, so the preload leaves
-fetch unchanged. An explicit `RDH_DIRECT_ORIGIN` enables transport rewriting
+| File | Role |
+|---|---|
+| [`src/bin/bridge.mts`](../src/bin/bridge.mts) | Message forwarding; attaches the access token; renews once and resends after a 401; answers a failed request with an error instead of dropping the connection |
+| [`src/bin/auth.mts`](../src/bin/auth.mts) | The SDK's `OAuthClientProvider` backed by encrypted storage; the loopback callback on `RDH_OAUTH_PORT` (default 3335); opening the browser |
+| [`src/bin/lock.mts`](../src/bin/lock.mts) | One sign-in or refresh at a time across bridge processes, so a rotating refresh token is spent once |
+| [`src/bin/secure-store.mts`](../src/bin/secure-store.mts) | AES-256-GCM records with the key in the OS keyring |
+
+The first request triggers sign-in when nothing is saved. A refresh that fails
+in transit keeps the saved sign-in and reports an error; only a refresh token
+the server rejects leads to a new browser sign-in. If the preferred callback
+port is busy, that sign-in uses another port and registers a new client for it.
+
+[`bin/oauth-fetch.mjs`](../bin/oauth-fetch.mjs) wraps the bridge's `fetch`.
+Direct transport is disabled by default, and the wrapper is then a no-op. An
+explicit `RDH_DIRECT_ORIGIN` enables transport rewriting
 for recognized OAuth routes on `RDH_PUBLIC_ORIGIN` and the exact configured MCP
 endpoint path. The browser's `/authorize` route stays public. Direct failures
 are propagated without replaying requests through the public route.
 
 Generated defaults in [`src/bin/deployment-defaults.mts`](../src/bin/deployment-defaults.mts)
-supply the canonical MCP origin. The launcher and preload share validation in
+supply the canonical MCP origin. The launcher and the fetch wrapper share validation in
 [`src/bin/config.mts`](../src/bin/config.mts). `RDH_MCP_URL` overrides the MCP
 endpoint and supplies the default OAuth origin; `RDH_PUBLIC_ORIGIN` can
 explicitly select a separate OAuth origin of the same Hub. Both origin
@@ -55,8 +63,7 @@ on loopback, and credentials and fragments are rejected.
 DSH scrubs credential-shaped ambient environment variables before starting a
 stdio server. The bridge does not need any secret in that environment: OAuth
 state is encrypted in `~/.mcp-auth/rdh-secure-v1/`, keyed by the endpoint URL.
-The encryption key stays in the OS keyring. The pinned build replaces upstream
-credential I/O and logging while preserving protocol and refresh coordination.
+The encryption key stays in the OS keyring.
 See [credential storage](credential-storage.md). The launcher writes only diagnostics to stderr; stdout belongs to the MCP protocol.
 
 ## Why `process.execPath`
@@ -120,9 +127,11 @@ guidance without editing this package.
 
 | Failure | Observable result |
 |---|---|
-| Secure bridge missing | Launcher exits 1 with a reinstall message; no tools. |
+| Keyring locked or unavailable | Launcher stops within 30 seconds with a storage message; no tools. |
 | OAuth canceled or timed out | Handshake fails; no tools until the next connection attempt. |
-| Callback port busy | Warning; derived port used for this run. |
+| Callback port busy | Warning; another port is used for this sign-in. |
+| Hub unreachable for one request | That request fails with an error; the connection stays up. |
+| Hub no longer knows the session | The bridge exits so the MCP client reconnects. |
 | Endpoint unreachable | MCP row fails discovery; Host skill and gate still load. |
 | Approval denied or unavailable | The gated call fails; calls allowed by the selected mode still work. |
 | Skill registry absent | Skill is skipped; approval gate still works. |
@@ -135,7 +144,7 @@ apply through HMR.
 ## Versioning
 
 `package.json` declares `engines.dsh >= 0.2.0`. The plugin manager rejects an
-install when the running DSH does not satisfy that requirement. Runtime dependencies include the pinned bridge, its transport libraries, the native keyring binding, and `@deepseek-ai/schemastery`.
+install when the running DSH does not satisfy that requirement. Runtime dependencies are the MCP SDK, the native keyring binding, `open`, and `@deepseek-ai/schemastery`.
 TypeScript sources under `src/` compile to ESM entrypoints, which
 are committed for Git distribution. npm consumers receive those precompiled
 files; the compiler and React/Node type declarations are development-only.

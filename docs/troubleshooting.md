@@ -8,33 +8,36 @@
    not exist, the MCP connection failed before tool discovery.
 3. Check the Harness logs for `mcp-client(remote-device-hub)` and
    `[remote-device-hub]` lines. The launcher writes diagnostics to stderr.
-4. Confirm `node_modules/dsh-remote-device-hub/bin/bridge/proxy.js` exists
-   in the profile. If it is missing, remove and reinstall the bundle.
-5. Restart DSH if the install result said `restart-required`.
+4. Confirm `node_modules/dsh-remote-device-hub/bin/bridge.mjs` and
+   `node_modules/@modelcontextprotocol/sdk` exist in the profile. If either is
+   missing, remove and reinstall the bundle.
+5. A line saying secure credential storage is unavailable means the system
+   keyring is locked or missing. Unlock it and restart DSH.
+6. Restart DSH if the install result said `restart-required`.
 
 ## The browser does not open for sign-in
 
 The bridge prints the authorization URL to its stderr, which DSH captures in
 its logs. Open that URL manually, complete sign-in, and wait for the callback.
-The default callback is `http://localhost:3335/oauth/callback`.
+The default callback is `http://127.0.0.1:3335/oauth/callback`.
 
-If another program uses port 3335, the launcher prints a warning and asks
-`mcp-remote` to derive a stable port for this run. Because a dynamic client
-registration is tied to its callback URL, the next sign-in may be required.
+If another program uses port 3335, the bridge prints a warning and uses another
+port for that sign-in. Because a dynamic client registration is tied to its
+callback URL, it registers a new client for that address.
 To remove the preference deliberately, set `RDH_OAUTH_PORT` to `off` in the MCP
 row's `env`.
 
 On a remote or headless machine, the browser must run on the machine that can
-reach the callback address. Forward `localhost:3335` from the DSH host to your
+reach the callback address. Forward `127.0.0.1:3335` from the DSH host to your
 local browser if necessary. Do not paste tokens into chat.
 
 ## Sign-in repeats, or the token file disappeared
 
-`mcp-remote` treats a 401 as invalid credentials and deletes
-`~/.mcp-auth/rdh-secure-v1/<hash>_tokens.json`, then starts a new browser
-authorization. The record is encrypted; there is no plaintext fallback. The private bridge
-discards upstream debug payloads and logs only approved events. Sign in
-again with one clean flow.
+After a 401 the bridge renews the token once and sends the request again. It
+starts a new browser sign-in only when the server rejects the saved refresh
+token; a refresh that merely fails in transit keeps the saved sign-in. Records
+live in `~/.mcp-auth/rdh-secure-v1/` and are encrypted; there is no plaintext
+fallback.
 
 Repeated login pages usually mean the flow cannot finish, not that the browser
 login failed. Two common causes:
@@ -56,14 +59,14 @@ login failed. Two common causes:
    token refresh or tool-call outcomes before retrying.
 
 2. **A previous bridge is still holding the sign-in.** Stop DSH or disable the
-   MCP row, confirm no `mcp-remote` process is left, then enable it once. The
-   callback listener should appear on `127.0.0.1:3335` while the browser is
-   waiting; complete the authorization and wait for the "Authorization
-   successful!" page before closing the tab.
+   MCP row, confirm no bridge process (`bin/launcher.mjs`) is left, then enable
+   it once. The callback listener should appear on `127.0.0.1:3335` while the
+   browser is waiting; complete the authorization and wait for the "Signed in
+   to Remote Device Hub" page before closing the tab. A sign-in times out after
+   five minutes.
 
-A sign-in that is canceled, times out, or never reaches the callback leaves
-`code_verifier` and `discovery_state` files behind. They are harmless; a later
-successful sign-in deletes stale flows. Do not delete `tokens.json` while a
+A sign-in that is canceled or times out leaves nothing behind; the verifier is
+removed when the attempt ends. Do not delete a `_tokens.json` record while a
 refresh is in progress.
 
 ## Sign-in succeeds but calls return 401
@@ -71,18 +74,18 @@ refresh is in progress.
 Access tokens are short-lived and refreshed in the background. If the service
 revoked the grant, remove the bundle's local token cache and restart DSH; then
 sign in again. Tokens live in `~/.mcp-auth/rdh-secure-v1/`; files are named by
-the MD5 of the endpoint URL. Changing the endpoint changes this cache key;
+the first 32 hex characters of the SHA-256 of the endpoint URL. Changing the endpoint changes this cache key;
 use the configured URL when identifying its files.
 
-Do not delete the whole `~/.mcp-auth` directory if other tools use
-`mcp-remote`; delete only this endpoint's files, or revoke the connection in
+Do not delete the whole `~/.mcp-auth` directory if other tools keep their
+sign-ins there; delete only this endpoint's files, or revoke the connection in
 Remote Device Hub account settings.
 
 ## Duplicate MCP bridges for the same Hub
 
-Two bridges for the same URL share one `mcp-remote` client cache. If their
-callback ports differ, each deletes the other's cached client registration on
-startup, and refresh can fail. Disable or remove duplicate MCP rows and
+Two bridges for the same URL share one set of records and take turns renewing
+it, so they do not break each other. If their callback ports differ, a new
+sign-in by one replaces the client registration the other was using. Disable or remove duplicate MCP rows and
 keep this bundle as the only Remote Device Hub MCP entry in the profile.
 
 ## Approval prompts do not appear

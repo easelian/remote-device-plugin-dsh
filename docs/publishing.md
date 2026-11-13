@@ -68,7 +68,7 @@ The package manifest declares:
 - `repository`, `homepage`, `bugs`, and `author` are present;
 - `prepublishOnly` runs `npm run check`, so a broken package cannot publish;
 - `files` includes the runtime, locales, icon, docs, skill, and market index;
-- `mcp-remote` remains a runtime dependency.
+- `@modelcontextprotocol/sdk` remains a runtime dependency.
 
 The package uses Apache-2.0 and includes the full `LICENSE` text. Publishing requires permission to publish `dsh-remote-device-hub` in the target registry. Check the package ownership and your account access before running the publish command.
 
@@ -103,7 +103,7 @@ dsh-remote-device-hub@0.3.12
 ```
 
 The plugin manager resolves it through the user's configured registry, checks
-`engines.dsh`, installs `mcp-remote`, and enables the bundle. No Git or SSH
+`engines.dsh`, installs the dependencies, and enables the bundle. No Git or SSH
 setup is required.
 
 For a private registry (GitHub Packages or an internal registry), each user
@@ -180,7 +180,7 @@ add the index URL once.
 1. Update the version in `package.json`; commit.
 2. Run `npm run market` so `market/index.json` lists the new version.
 3. Run `npm run check`; verify `npm pack --dry-run` contains `index.js`,
-   `bin/launcher.mjs`, `bin/bridge/`, `bin/secure-store.mjs`, `bin/bridge-log.mjs`, `cordis.patch.yml`, `locale/`, `assets/`, `skills/`, and
+   `bin/launcher.mjs`, `bin/bridge.mjs`, `bin/auth.mjs`, `bin/secure-store.mjs`, `cordis.patch.yml`, `locale/`, `assets/`, `skills/`, and
    `market/index.json`.
 4. Tag the release (`git tag -a vX.Y.Z`) and push the commit and tag.
 5. Publish to npm with the manual workflow (or `npm publish`), then confirm the

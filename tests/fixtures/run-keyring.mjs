@@ -25,29 +25,26 @@ try {
       '-c',
       'gnome-keyring-daemon --unlock --components=secrets <<EOF\nfixture-password\nEOF\n"$RDH_TEST_NODE" tests/fixtures/bridge-security.mjs',
     ],
-    { env: { ...env, RDH_TEST_NODE: process.execPath }, encoding: 'utf8', timeout: 30_000 },
+    { env: { ...env, RDH_TEST_NODE: process.execPath }, encoding: 'utf8', timeout: 60_000 },
   );
   assert.equal(result.error, undefined);
   assert.equal(result.status, 0, result.stderr);
   process.stdout.write(result.stdout);
-  const unavailable = spawnSync(
-    process.execPath,
-    ['bin/bridge/proxy.js', 'https://must-not-connect.invalid/mcp'],
-    {
-      env: {
-        ...env,
-        MCP_REMOTE_CONFIG_DIR: join(root, 'unavailable'),
-        DBUS_SESSION_BUS_ADDRESS: 'unix:path=/nonexistent/rdh-test-bus',
-      },
-      encoding: 'utf8',
-      timeout: 15_000,
+  const unavailable = spawnSync(process.execPath, ['bin/launcher.mjs'], {
+    env: {
+      ...env,
+      RDH_MCP_URL: 'https://must-not-connect.invalid/mcp',
+      MCP_REMOTE_CONFIG_DIR: join(root, 'unavailable'),
+      DBUS_SESSION_BUS_ADDRESS: 'unix:path=/nonexistent/rdh-test-bus',
     },
-  );
+    encoding: 'utf8',
+    timeout: 45_000,
+  });
   assert.equal(unavailable.error, undefined);
   assert.equal(unavailable.status, 1);
   assert.match(unavailable.stderr, /No plaintext fallback is allowed/);
   assert.equal(unavailable.stdout, '');
-  console.log('PASS: native keyring failure stops the packaged proxy before connecting');
+  console.log('PASS: native keyring failure stops the launcher before connecting');
 } finally {
   await rm(root, { recursive: true, force: true });
 }
