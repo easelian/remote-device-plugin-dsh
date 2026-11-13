@@ -20,7 +20,6 @@
     "index.js",
     "permissions.js",
     "client.js",
-    "bin/*.mjs",
     "cordis.patch.yml",
     "locale/*.json",
     "assets/*.svg",
@@ -29,7 +28,8 @@
     "market/*.json",
     "README.md",
     "README.zh.md",
-    "LICENSE"
+    "LICENSE",
+    "bin/**"
   ],
   "keywords": [
     "dsh",
@@ -58,7 +58,12 @@
   },
   "dependencies": {
     "@deepseek-ai/schemastery": "^3.18.5",
-    "mcp-remote": "^0.15.1"
+    "@napi-rs/keyring": "2.1.2",
+    "express": "4.22.3",
+    "mcp-remote": "0.15.1",
+    "open": "10.2.0",
+    "strict-url-sanitise": "0.0.1",
+    "undici": "7.30.1"
   },
   "devDependencies": {
     "@biomejs/biome": "2.5.15",
@@ -76,13 +81,14 @@
     "pack:check": "npm pack --dry-run",
     "prepublishOnly": "npm run check",
     "check": "npm run build && npm run validate && npm test",
-    "build": "tsc -p tsconfig.json && tsc -p tsconfig.client.json",
+    "build": "tsc -p tsconfig.json && tsc -p tsconfig.client.json && node scripts/build-bridge.mjs",
     "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.client.json --noEmit",
     "prepack": "npm run build",
     "format": "biome format --write .",
     "format:check": "biome format .",
     "lint": "biome lint .",
-    "style:check": "biome check ."
+    "style:check": "biome check .",
+    "test:keyring": "node tests/fixtures/run-keyring.mjs"
   },
   "dsh": {
     "bundle": {

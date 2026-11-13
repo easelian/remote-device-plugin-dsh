@@ -35,6 +35,10 @@ const required = [
   'client.js',
   'bin/launcher.mjs',
   'bin/oauth-fetch.mjs',
+  'bin/secure-store.mjs',
+  'bin/bridge-log.mjs',
+  'bin/bridge/proxy.js',
+  'bin/bridge/LICENSE.mcp-remote',
   'bin/config.mjs',
   'locale/en.json',
   'locale/zh.json',
@@ -65,7 +69,7 @@ check(
 );
 check(manifest.engines?.dsh === '>=0.2.0', 'engines.dsh must declare the supported runtime');
 check(Boolean(manifest.dependencies?.['mcp-remote']), 'mcp-remote must be a runtime dependency');
-check(manifest.files?.includes('bin/*.mjs'), 'files must include the launcher and OAuth preload');
+check(manifest.files?.includes('bin/**'), 'files must include the launcher and OAuth preload');
 check(manifest.files?.includes('index.js'), 'files must include the Host half');
 check(manifest.files?.includes('client.js'), 'files must include the Client half');
 check(manifest.exports?.['./client'] === './client.js', 'exports must expose ./client');

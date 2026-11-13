@@ -20,5 +20,7 @@ jobs:
       - run: npm ci
       - run: npm run style:check
       - run: npm run check
+      - run: sudo apt-get update && sudo apt-get install -y gnome-keyring dbus-x11
+      - run: npm run test:keyring
       - name: Check committed ESM matches TypeScript
         run: git diff --exit-code -- index.js permissions.js client.js bin scripts

@@ -9,14 +9,12 @@
  */
 import { spawn } from 'node:child_process';
 import { realpathSync } from 'node:fs';
-import { createRequire } from 'node:module';
 import net from 'node:net';
 import { fileURLToPath } from 'node:url';
 import { DEFAULT_OAUTH_PORT, resolveConfig } from './config.mjs';
-const require = createRequire(import.meta.url);
-/** Resolve the installed mcp-remote proxy entry. */
+/** Resolve only the generated secure bridge; never fall back to the upstream executable. */
 export function resolveProxy() {
-    return require.resolve('mcp-remote/dist/proxy.js');
+    return realpathSync(fileURLToPath(new URL('./bridge/proxy.js', import.meta.url)));
 }
 /**
  * Parse the preferred OAuth callback port.
@@ -89,7 +87,7 @@ async function main() {
         proxyPath = resolveProxy();
     }
     catch {
-        log('mcp-remote is missing. Reinstall the dsh-remote-device-hub bundle.');
+        log('The secure MCP bridge is missing. Reinstall the dsh-remote-device-hub bundle.');
         process.exitCode = 1;
         return;
     }
@@ -99,8 +97,8 @@ async function main() {
         config = resolveConfig();
         port = preferredPort();
     }
-    catch (error) {
-        log(error instanceof Error ? error.message : String(error));
+    catch {
+        log('Invalid RDH endpoint or callback port configuration. Check the configured values.');
         process.exitCode = 1;
         return;
     }
@@ -121,8 +119,8 @@ async function main() {
     for (const signal of signals) {
         process.on(signal, () => forward(signal));
     }
-    child.once('error', (error) => {
-        log(`could not start mcp-remote: ${error.message}`);
+    child.once('error', () => {
+        log('Could not start the secure MCP bridge. Check the installation.');
         process.exitCode = 1;
     });
     child.once('exit', (code, signal) => {

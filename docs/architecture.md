@@ -18,7 +18,7 @@ on the public name prefix.
 ```text
 DSH stdio MCP transport
   → node/Electron (ELECTRON_RUN_AS_NODE=1) bin/launcher.mjs
-  → node/Electron mcp-remote/dist/proxy.js
+  → node/Electron bin/bridge/proxy.js
   → HTTPS Streamable HTTP https://rdh.easelian.com/mcp
 ```
 
@@ -32,7 +32,7 @@ access-token lifetime or the rotating refresh token. `mcp-remote` owns:
 - access-token refresh and a single-use refresh-token lease;
 - the stdio↔HTTP translation the DSH client sees.
 
-The launcher resolves `mcp-remote` from this package's own dependency, checks
+The launcher uses the prebuilt private bridge, checks
 whether the preferred callback port is free, and spawns the proxy with
 `--transport http-only`. If the port is busy it omits the positional port and
 lets `mcp-remote` derive one, so a busy port is not fatal.
@@ -54,8 +54,10 @@ on loopback, and credentials and fragments are rejected.
 
 DSH scrubs credential-shaped ambient environment variables before starting a
 stdio server. The bridge does not need any secret in that environment: OAuth
-state lives in `~/.mcp-auth/mcp-remote-v1/`, keyed by the endpoint URL. The
-launcher writes only diagnostics to stderr; stdout belongs to the MCP protocol.
+state is encrypted in `~/.mcp-auth/rdh-secure-v1/`, keyed by the endpoint URL.
+The encryption key stays in the OS keyring. The pinned build replaces upstream
+credential I/O and logging while preserving protocol and refresh coordination.
+See [credential storage](credential-storage.md). The launcher writes only diagnostics to stderr; stdout belongs to the MCP protocol.
 
 ## Why `process.execPath`
 
@@ -118,7 +120,7 @@ guidance without editing this package.
 
 | Failure | Observable result |
 |---|---|
-| `mcp-remote` missing | Launcher exits 1 with a reinstall message; no tools. |
+| Secure bridge missing | Launcher exits 1 with a reinstall message; no tools. |
 | OAuth canceled or timed out | Handshake fails; no tools until the next connection attempt. |
 | Callback port busy | Warning; derived port used for this run. |
 | Endpoint unreachable | MCP row fails discovery; Host skill and gate still load. |
@@ -133,7 +135,7 @@ apply through HMR.
 ## Versioning
 
 `package.json` declares `engines.dsh >= 0.2.0`. The plugin manager rejects an
-install when the running DSH does not satisfy that requirement. The runtime dependencies are `mcp-remote` and `@deepseek-ai/schemastery`.
+install when the running DSH does not satisfy that requirement. Runtime dependencies include the pinned bridge, its transport libraries, the native keyring binding, and `@deepseek-ai/schemastery`.
 TypeScript sources under `src/` compile to ESM entrypoints, which
 are committed for Git distribution. npm consumers receive those precompiled
 files; the compiler and React/Node type declarations are development-only.

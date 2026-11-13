@@ -8,7 +8,7 @@
    not exist, the MCP connection failed before tool discovery.
 3. Check the Harness logs for `mcp-client(remote-device-hub)` and
    `[remote-device-hub]` lines. The launcher writes diagnostics to stderr.
-4. Confirm `node_modules/dsh-remote-device-hub/node_modules/mcp-remote` exists
+4. Confirm `node_modules/dsh-remote-device-hub/bin/bridge/proxy.js` exists
    in the profile. If it is missing, remove and reinstall the bundle.
 5. Restart DSH if the install result said `restart-required`.
 
@@ -31,9 +31,9 @@ local browser if necessary. Do not paste tokens into chat.
 ## Sign-in repeats, or the token file disappeared
 
 `mcp-remote` treats a 401 as invalid credentials and deletes
-`~/.mcp-auth/mcp-remote-v1/<hash>_tokens.json`, then starts a new browser
-authorization. There is no plaintext backup of that file; logs redact token
-values, so the old access/refresh token cannot be recovered locally. Sign in
+`~/.mcp-auth/rdh-secure-v1/<hash>_tokens.json`, then starts a new browser
+authorization. The record is encrypted; there is no plaintext fallback. The private bridge
+discards upstream debug payloads and logs only approved events. Sign in
 again with one clean flow.
 
 Repeated login pages usually mean the flow cannot finish, not that the browser
@@ -70,7 +70,7 @@ refresh is in progress.
 
 Access tokens are short-lived and refreshed in the background. If the service
 revoked the grant, remove the bundle's local token cache and restart DSH; then
-sign in again. Tokens live in `~/.mcp-auth/mcp-remote-v1/`; files are named by
+sign in again. Tokens live in `~/.mcp-auth/rdh-secure-v1/`; files are named by
 the MD5 of the endpoint URL. Changing the endpoint changes this cache key;
 use the configured URL when identifying its files.
 
@@ -127,3 +127,10 @@ The launcher is started with the DSH executable plus
 Windows path. If the bundle fails to start, confirm that the profile's
 `node_modules/dsh-remote-device-hub/bin/launcher.mjs` exists and that DSH was
 restarted after installation. No system Node.js installation is required.
+
+## Secure storage unavailable
+
+Unlock the OS keyring before restarting RDH. On Linux a persistent Secret Service
+is required; do not switch to a plaintext cache. A missing key for existing
+ciphertext or an interrupted key initialization requires explicit recovery.
+See [credential storage](credential-storage.md).

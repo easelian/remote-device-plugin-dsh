@@ -54,7 +54,7 @@ Best when the source can be public and you do not want to run a registry.
    `git+https://github.com/easelian/remote-device-plugin-dsh.git#v0.3.12`.
 
 The repository still contains no secrets: the OAuth token is created per user
-and stored under `~/.mcp-auth/` on the user's machine.
+and stored encrypted under `~/.mcp-auth/rdh-secure-v1/`, with its key in the OS keyring.
 
 ## 3. npm registry
 
@@ -180,7 +180,7 @@ add the index URL once.
 1. Update the version in `package.json`; commit.
 2. Run `npm run market` so `market/index.json` lists the new version.
 3. Run `npm run check`; verify `npm pack --dry-run` contains `index.js`,
-   `bin/launcher.mjs`, `cordis.patch.yml`, `locale/`, `assets/`, `skills/`, and
+   `bin/launcher.mjs`, `bin/bridge/`, `bin/secure-store.mjs`, `bin/bridge-log.mjs`, `cordis.patch.yml`, `locale/`, `assets/`, `skills/`, and
    `market/index.json`.
 4. Tag the release (`git tag -a vX.Y.Z`) and push the commit and tag.
 5. Publish to npm with the manual workflow (or `npm publish`), then confirm the
@@ -201,7 +201,7 @@ Regardless of channel, every user needs:
 - permission to install a bundle in their DSH profile.
 
 The plugin contains no account credentials. The access and refresh tokens are
-created by the OAuth flow and stored by `mcp-remote` under
-`~/.mcp-auth/mcp-remote-v1/`. A device's `allow_write` and `allow_shell`
+created by the OAuth flow and stored encrypted by the private bridge under
+`~/.mcp-auth/rdh-secure-v1/`. A device's `allow_write` and `allow_shell`
 settings still apply, and the bundle's approval gate asks before mutation when
 the profile has an approval channel.
