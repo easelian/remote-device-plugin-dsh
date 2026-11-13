@@ -4,9 +4,7 @@
  * MCP endpoint can use an explicitly configured origin of the same Hub.
  * Failed requests are never replayed: a timeout does not prove non-delivery.
  */
-import { createRequire } from 'node:module';
 import { resolveConfig } from './config.mjs';
-const CONFIG = resolveConfig();
 const DIRECT_PATHS = new Set([
     '/.well-known/oauth-authorization-server',
     '/.well-known/openid-configuration',
@@ -15,7 +13,7 @@ const DIRECT_PATHS = new Set([
     '/register',
     '/revoke',
 ]);
-export function directURL(input, config = CONFIG) {
+export function directURL(input, config = resolveConfig()) {
     if (!config.directOrigin) {
         return undefined;
     }
@@ -55,47 +53,20 @@ function replaceInput(input, target) {
     return new Request(target, input);
 }
 const WRAPPED = Symbol.for('rdh.oauthFetch.wrapped');
-export function wrap(baseFetch, config = CONFIG) {
-    const marker = Reflect.get(baseFetch, WRAPPED);
-    if (marker === true) {
+/** Route the bridge's own requests; with no direct origin configured this is `baseFetch`. */
+export function wrap(baseFetch, config = resolveConfig()) {
+    if (!config.directOrigin || Reflect.get(baseFetch, WRAPPED) === true) {
         return baseFetch;
     }
     const wrapped = async (input, init) => {
         const target = directURL(input, config);
-        if (target === undefined) {
-            return baseFetch(input, init);
-        }
-        return baseFetch(replaceInput(input, target), init);
+        return target === undefined
+            ? baseFetch(input, init)
+            : baseFetch(replaceInput(input, target), init);
     };
     Object.defineProperty(wrapped, WRAPPED, { value: true });
     return wrapped;
 }
 function isRecord(value) {
     return value !== null && typeof value === 'object';
-}
-function isFetchModule(value) {
-    return isRecord(value) && typeof value.fetch === 'function';
-}
-function patchUndici(requireFrom) {
-    try {
-        const undici = requireFrom('undici');
-        if (isFetchModule(undici)) {
-            undici.fetch = wrap(undici.fetch.bind(undici));
-        }
-    }
-    catch {
-        // A deployment without this copy of undici still uses the global wrapper.
-    }
-}
-if (CONFIG.directOrigin) {
-    globalThis.fetch = wrap(globalThis.fetch.bind(globalThis));
-    // mcp-remote imports `fetch as fetch2` from undici for token exchange and
-    // transport requests. The plugin's dependency tree can hold more than one
-    // undici copy, so patch the copy resolved from the proxy itself as well as
-    // the one next to this preload.
-    const proxyArg = process.argv.find((arg) => /(?:^|[\\/])mcp-remote[\\/]dist[\\/]proxy\.js$/u.test(arg));
-    if (proxyArg !== undefined) {
-        patchUndici(createRequire(proxyArg));
-    }
-    patchUndici(createRequire(import.meta.url));
 }

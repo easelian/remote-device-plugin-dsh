@@ -81,7 +81,7 @@ OAuth records are encrypted in `~/.mcp-auth/rdh-secure-v1/`; the system keyring
 holds the random encryption key. No plaintext fallback is allowed.
 See [credential storage](docs/credential-storage.md) for prerequisites and upgrades.
 
-令牌刷新由 `mcp-remote` 处理，不使用 Hub 的刷新结果恢复接口。如果刷新响应
+令牌刷新由 MCP 官方 SDK 的 OAuth 客户端处理，不使用 Hub 的刷新结果恢复接口。如果刷新响应
 丢失，可能需要重新登录；不要手动重放已保存的刷新令牌。
 如果认证服务的 issuer 发生变化，先停止桥接，按下方升级和移除章节仅清理该 MCP
 入口的客户端和令牌缓存，再重新登录。
@@ -164,7 +164,7 @@ get_operation_status, list_operations, read_process, list_processes
 | `serverName` | `remote-device-hub` | MCP 工具命名空间，也是审批网关使用的前缀。MCP 行和 Host 行必须保持一致。 |
 | `permissionMode` | `read-only` | `always-ask`、`read-only`、`low-risk` 或 `allow-all`。插件行页面也提供同一字段。 |
 | `confirmMutations` | `true` | 未设置 `permissionMode` 时使用的布尔值；`false` 对应 `allow-all`。 |
-| `RDH_OAUTH_PORT` | `3335` | 首选的 loopback 回调端口。`off` 或 `0` 表示让 `mcp-remote` 自行推导端口。端口被占用时，本次运行会退回推导端口。 |
+| `RDH_OAUTH_PORT` | `3335` | 首选的 loopback 回调端口。`off` 或 `0` 表示由系统选择端口。端口被占用时，本次登录改用其他端口。 |
 | `RDH_MCP_URL` | 发布配置中的 MCP 地址 | 覆盖 endpoint，例如 `https://hub.example.test/mcp`。 |
 | `RDH_DIRECT_ORIGIN` | 不启用 | 同一 Hub 的可选直连 origin。只有显式设置才会改写服务端请求；`off` 或空字符串禁用。 |
 | `RDH_PUBLIC_ORIGIN` | `RDH_MCP_URL` 的 origin | OAuth 公开 origin；只有与 MCP 入口不同且已确认属于同一 Hub 时才需设置。 |
@@ -206,16 +206,16 @@ bundle 为它的 Host 行提供了一个配置控件。打开侧边栏 **插件 
 ## 架构
 
 ```text
-DSH MCP 客户端  ──stdio──▶  bin/launcher.mjs  ──▶  mcp-remote
-                                                   │  OAuth + 刷新
-                                                   ▼
-                                      配置中的 MCP endpoint
+DSH MCP 客户端  ──stdio──▶  bin/launcher.mjs（MCP SDK 传输）
+                                   │  OAuth + 刷新
+                                   ▼
+                          配置中的 MCP endpoint
 ```
 
 `@deepseek-ai/dsh-mcp-client` 目前没有内置 OAuth，只支持 stdio 和带静态 header
-的 Streamable HTTP。`mcp-remote` 负责服务发现、动态客户端注册、PKCE、令牌刷新
-和 loopback 回调服务。launcher 固定 endpoint 和回调端口，并用
-`process.execPath` 启动 `mcp-remote`：DSH Desktop 中是 Electron 可执行文件，
+的 Streamable HTTP。桥接是基于 MCP 官方 SDK 的小程序：SDK 提供两端传输、
+服务发现、动态客户端注册、PKCE 和令牌刷新；桥接补上加密存储、loopback 回调
+和多个桥接进程之间的协调。它用 `process.execPath` 运行：DSH Desktop 中是 Electron 可执行文件，
 CLI 启动的 DSH 中是 Node 可执行文件。
 
 Host 部分（`index.js`）不导入任何 DSH 包。存在 `ctx.skills` 时注册随包技能；

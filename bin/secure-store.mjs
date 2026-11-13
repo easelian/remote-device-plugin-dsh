@@ -67,7 +67,7 @@ export class SecureStore {
             let value = await entry.getPassword(AbortSignal.timeout(10_000));
             if (value === null) {
                 // Never replace a lost encryption key over existing credential records.
-                if ((await readdir(this.directory)).some((name) => name !== '.key-init-lock')) {
+                if ((await readdir(this.directory)).some((name) => !name.startsWith('.'))) {
                     throw new SecureStorageError();
                 }
                 value = randomBytes(32).toString('base64');
@@ -104,16 +104,6 @@ export class SecureStore {
             }
             finally {
                 await file.close();
-            }
-            // Upstream writes this coordination lease directly. It contains no credential.
-            if (name === 'refresh_in_progress.json') {
-                const lease = JSON.parse(content.toString('utf8'));
-                if (!Number.isInteger(lease.pid) ||
-                    typeof lease.nonce !== 'string' ||
-                    !Number.isFinite(lease.at)) {
-                    throw new SecureStorageError();
-                }
-                return JSON.stringify({ pid: lease.pid, nonce: lease.nonce, at: lease.at });
             }
             if (content.length < 32 || content.subarray(0, 4).toString() !== 'RDH1') {
                 throw new SecureStorageError();

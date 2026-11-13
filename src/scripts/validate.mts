@@ -37,8 +37,9 @@ const required = [
   'bin/oauth-fetch.mjs',
   'bin/secure-store.mjs',
   'bin/bridge-log.mjs',
-  'bin/bridge/proxy.js',
-  'bin/bridge/LICENSE.mcp-remote',
+  'bin/bridge.mjs',
+  'bin/auth.mjs',
+  'bin/lock.mjs',
   'bin/config.mjs',
   'locale/en.json',
   'locale/zh.json',
@@ -68,8 +69,12 @@ check(
   'dsh.bundle.patch must point at cordis.patch.yml',
 );
 check(manifest.engines?.dsh === '>=0.2.0', 'engines.dsh must declare the supported runtime');
-check(Boolean(manifest.dependencies?.['mcp-remote']), 'mcp-remote must be a runtime dependency');
-check(manifest.files?.includes('bin/**'), 'files must include the launcher and OAuth preload');
+check(
+  Boolean(manifest.dependencies?.['@modelcontextprotocol/sdk']),
+  'the MCP SDK must be a runtime dependency',
+);
+check(!(await exists('bin/bridge')), 'bin/bridge is a leftover of the patched upstream bridge');
+check(manifest.files?.includes('bin/**'), 'files must include the launcher and bridge');
 check(manifest.files?.includes('index.js'), 'files must include the Host half');
 check(manifest.files?.includes('client.js'), 'files must include the Client half');
 check(manifest.exports?.['./client'] === './client.js', 'exports must expose ./client');

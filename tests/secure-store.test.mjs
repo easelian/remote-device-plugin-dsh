@@ -4,7 +4,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import test from 'node:test';
 import { SecureStore, STORAGE_ERROR } from '../bin/secure-store.mjs';
-import { bridgeMessage } from '../bin/bridge-log.mjs';
+import { authorizationNotice } from '../bin/bridge-log.mjs';
 
 async function fixture(t) {
   const root = await mkdtemp(join(tmpdir(), 'rdh-secure-test-'));
@@ -103,21 +103,23 @@ test('concurrent initialization shares one durable key and deletion persists', a
   assert.equal(await store.read('endpoint', 'tokens.json'), undefined);
 });
 
-test('logs discard arbitrary errors and complete token objects while retaining useful events', () => {
+test('the sign-in link is printed only when it is a plain authorization request', () => {
   const token = 'sensitive-auth-value';
-  for (const value of [new Error(token), { access_token: token }, token]) {
-    assert.ok(!String(bridgeMessage('Fatal error:', [value])).includes(token));
-  }
-  assert.equal(
-    bridgeMessage('Refreshed the access token before it expired'),
-    'Refreshed the access token before it expired',
-  );
   const url =
     'https://auth.example/authorize?response_type=code&client_id=public&state=state&code_challenge=challenge';
-  assert.ok(bridgeMessage(`\nPlease authorize this client by visiting:\n${url}\n`).includes(url));
+  assert.ok(authorizationNotice(new URL(url)).includes(url));
+  for (const unsafe of [
+    `${url}&access_token=${token}`,
+    `${url}#${token}`,
+    url.replace('https://', `https://user:${token}@`),
+    url.replace('https://', 'http://'),
+    url.replace('response_type=code', 'response_type=token'),
+  ]) {
+    const notice = authorizationNotice(new URL(unsafe));
+    assert.equal(notice.includes(token), false);
+    assert.equal(notice.includes('auth.example'), false);
+  }
   assert.ok(
-    !bridgeMessage(
-      `\nPlease authorize this client by visiting:\n${url}&access_token=${token}\n`,
-    ).includes(token),
+    authorizationNotice(new URL(url.replace('https://', 'http://')), true).includes('http://'),
   );
 });

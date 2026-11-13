@@ -7,13 +7,7 @@ import { join } from 'node:path';
 import test from 'node:test';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
-import {
-  buildProxyArgs,
-  isEntryPoint,
-  isPortFree,
-  preferredPort,
-  resolveProxy,
-} from '../bin/launcher.mjs';
+import { isEntryPoint, isPortFree, preferredPort } from '../bin/launcher.mjs';
 
 test('preferredPort defaults to 3335', () => {
   assert.equal(preferredPort(''), 3335);
@@ -32,62 +26,6 @@ test('preferredPort rejects invalid values', () => {
   for (const value of ['abc', '65536', '-1', '1.5']) {
     assert.throws(() => preferredPort(value), /RDH_OAUTH_PORT/);
   }
-});
-
-test('buildProxyArgs passes the endpoint, port, and transport', () => {
-  const args = buildProxyArgs({
-    proxyPath: '/tmp/proxy.js',
-    url: 'https://example.test/mcp',
-    port: 3335,
-  });
-  assert.deepEqual(args, [
-    '/tmp/proxy.js',
-    'https://example.test/mcp',
-    '3335',
-    '--transport',
-    'http-only',
-    '--static-oauth-client-metadata',
-    JSON.stringify({ client_name: 'Remote Device Hub for DeepSeek Harness' }),
-  ]);
-});
-
-test('buildProxyArgs omits the positional port when disabled', () => {
-  const args = buildProxyArgs({
-    proxyPath: '/tmp/proxy.js',
-    url: 'https://example.test/mcp',
-    port: null,
-  });
-  assert.deepEqual(args, [
-    '/tmp/proxy.js',
-    'https://example.test/mcp',
-    '--transport',
-    'http-only',
-    '--static-oauth-client-metadata',
-    JSON.stringify({ client_name: 'Remote Device Hub for DeepSeek Harness' }),
-  ]);
-});
-
-test('loopback HTTP is allowed explicitly, while remote HTTP cannot reach the proxy', () => {
-  for (const host of ['localhost', '127.0.0.1', '[::1]']) {
-    const url = `http://${host}:8080/mcp`;
-    assert.deepEqual(buildProxyArgs({ proxyPath: '/tmp/proxy.js', url, port: null }), [
-      '/tmp/proxy.js',
-      url,
-      '--transport',
-      'http-only',
-      '--static-oauth-client-metadata',
-      JSON.stringify({ client_name: 'Remote Device Hub for DeepSeek Harness' }),
-      '--allow-http',
-    ]);
-  }
-  assert.throws(
-    () => buildProxyArgs({ proxyPath: '/tmp/proxy.js', url: 'http://hub.example/mcp' }),
-    /RDH_MCP_URL/,
-  );
-});
-
-test('resolveProxy points only at the secure private bridge', () => {
-  assert.match(resolveProxy(), /bin[\\/]bridge[\\/]proxy\.js$/u);
 });
 
 test('isEntryPoint recognizes a symlinked profile installation', async () => {
@@ -122,19 +60,18 @@ test('isPortFree sees an available port and a bound port', async () => {
   assert.equal(await isPortFree(port), true);
 });
 
-test('the private bridge rejects unsupported auth modes before storage or network access', () => {
-  for (const option of ['--device-code', '--client-credentials', '--header-file']) {
-    const result = spawnSync(
-      process.execPath,
-      [resolveProxy(), 'https://must-not-connect.invalid/mcp', option],
-      {
-        encoding: 'utf8',
-        timeout: 5000,
-      },
-    );
-    assert.equal(result.error, undefined);
-    assert.equal(result.status, 1);
-    assert.match(result.stderr, /Unsupported private bridge option/);
-    assert.equal(result.stdout, '');
-  }
+test('a bad endpoint stops the launcher before storage or network access', () => {
+  const result = spawnSync(
+    process.execPath,
+    [fileURLToPath(new URL('../bin/launcher.mjs', import.meta.url))],
+    {
+      encoding: 'utf8',
+      timeout: 10000,
+      env: { ...process.env, RDH_MCP_URL: 'http://hub.example/mcp' },
+    },
+  );
+  assert.equal(result.error, undefined);
+  assert.equal(result.status, 1);
+  assert.match(result.stderr, /Invalid RDH endpoint/);
+  assert.equal(result.stdout, '');
 });

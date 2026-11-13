@@ -90,8 +90,8 @@ key is held in the system keyring. Linux requires an unlocked Secret Service
 (such as GNOME Keyring or KWallet); macOS and Windows use their native credential
 services. There is no automatic plaintext fallback. See [credential storage](docs/credential-storage.md).
 
-The bridge delegates token refresh to `mcp-remote` and does not use the Hub's
-recoverable refresh extension. If a refresh response is lost, the grant may
+The bridge refreshes tokens through the MCP SDK's OAuth client and does not use
+the Hub's recoverable refresh extension. If a refresh response is lost, the grant may
 need a new sign-in. Do not manually replay the saved refresh token.
 If the authorization server's issuer changes, stop the bridge and clear only
 this MCP endpoint's cached client and tokens as described under upgrading and
@@ -177,7 +177,7 @@ restate every field you keep.
 | `serverName` | `remote-device-hub` | MCP tool namespace and the prefix used by the approval gate. Keep the MCP row and the Host row in sync. |
 | `permissionMode` | `read-only` | `always-ask`, `read-only`, `low-risk`, or `allow-all`. The Plugins row page exposes the same field. |
 | `confirmMutations` | `true` | Boolean fallback when `permissionMode` is not set; `false` selects `allow-all`. |
-| `RDH_OAUTH_PORT` | `3335` | Preferred loopback callback port. `off` or `0` lets `mcp-remote` derive a stable port. If the port is busy, this run falls back to the derived port. |
+| `RDH_OAUTH_PORT` | `3335` | Preferred loopback callback port. `off` or `0` lets the system choose one. If the port is busy, this sign-in uses another port. |
 | `RDH_MCP_URL` | `https://rdh.easelian.com/mcp` | Override the endpoint, for example for a self-hosted Hub. |
 | `RDH_DIRECT_ORIGIN` | Disabled | Optional explicit transport origin for server-side OAuth and MCP requests. Unset, empty, or `off` uses the configured public endpoints. |
 | `RDH_PUBLIC_ORIGIN` | Origin of `RDH_MCP_URL` | OAuth origin eligible for direct transport. Set explicitly only when the same Hub uses a separate OAuth origin. |
@@ -192,7 +192,7 @@ URLs require HTTPS, except for HTTP on loopback. Origin settings must not have
 paths, queries, fragments, or credentials. Invalid settings stop the launcher
 with a configuration error.
 
-When explicitly enabled, the fetch preload sends recognized server-side OAuth
+When explicitly enabled, the bridge sends recognized server-side OAuth
 paths and the configured MCP endpoint path to `RDH_DIRECT_ORIGIN`. Browser
 `/authorize` requests stay public. Configure only a direct origin serving the
 same Hub, because it receives tokens and MCP traffic. Failed requests are not
@@ -229,18 +229,19 @@ of the Host row's `Config`, which is what makes the settings form available.
 ## Architecture
 
 ```text
-DSH MCP client  ──stdio──▶  bin/launcher.mjs  ──▶  mcp-remote
-                                                   │  OAuth + refresh
-                                                   ▼
-                                      https://rdh.easelian.com/mcp
+DSH MCP client  ──stdio──▶  bin/launcher.mjs (MCP SDK transports)
+                                   │  OAuth + refresh
+                                   ▼
+                      https://rdh.easelian.com/mcp
 ```
 
 `@deepseek-ai/dsh-mcp-client` has no built-in OAuth flow; it supports stdio and
-Streamable HTTP with static headers. `mcp-remote` supplies discovery, dynamic
-client registration, PKCE, token refresh, and a loopback callback server. The
-launcher pins the endpoint and the callback port, and runs `mcp-remote` on
-`process.execPath`, which is the Electron executable in DSH Desktop and the Node
-executable in a CLI-hosted DSH.
+Streamable HTTP with static headers. The bridge is a small
+program built on the official MCP SDK: the SDK supplies both transports,
+discovery, dynamic client registration, PKCE, and token refresh; the bridge adds
+encrypted storage, the loopback callback, and coordination between bridge
+processes. It runs on `process.execPath`, which is the Electron executable in DSH
+Desktop and the Node executable in a CLI-hosted DSH.
 
 The Host half (`index.js`) imports no DSH package. It registers the bundled
 skill through `ctx.skills` when that service exists and listens on

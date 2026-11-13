@@ -2,7 +2,7 @@
 #
 # Two rows are inserted:
 #   1. dsh-mcp-client runs the stdio OAuth bridge bundled by this package. The
-#      bridge keeps the OAuth access/refresh token rotating in ~/.mcp-auth and
+#      bridge keeps the OAuth access/refresh token, encrypted, in ~/.mcp-auth and
 #      forwards MCP traffic to the generated deployment endpoint.
 #   2. This package's Host half registers the remote-device-hub skill
 #      and asks for approval before a device-mutating MCP tool runs.

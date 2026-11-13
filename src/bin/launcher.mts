@@ -3,26 +3,25 @@
  * Remote Device Hub stdio bridge.
  *
  * DSH speaks MCP over stdio, while Remote Device Hub exposes a protected
- * Streamable HTTP endpoint that requires OAuth. This launcher runs the
- * `mcp-remote` proxy with the endpoint and a stable local OAuth callback port,
- * so the DSH MCP client can treat the service like a local stdio server.
+ * Streamable HTTP endpoint that requires OAuth. This launcher validates the
+ * configuration and runs the bridge in this process, so the DSH MCP client can
+ * treat the service like a local stdio server.
  */
 
-import { spawn } from 'node:child_process';
 import { realpathSync } from 'node:fs';
 import net from 'node:net';
 import { fileURLToPath } from 'node:url';
 
+import { BridgeAuth } from './auth.mjs';
+import { runBridge } from './bridge.mjs';
+import { log } from './bridge-log.mjs';
 import { DEFAULT_OAUTH_PORT, resolveConfig } from './config.mjs';
-
-/** Resolve only the generated secure bridge; never fall back to the upstream executable. */
-export function resolveProxy() {
-  return realpathSync(fileURLToPath(new URL('./bridge/proxy.js', import.meta.url)));
-}
+import { wrap } from './oauth-fetch.mjs';
+import { STORAGE_ERROR, SecureStorageError, secureStore } from './secure-store.mjs';
 
 /**
  * Parse the preferred OAuth callback port.
- * `off` or `0` disables the preference and lets mcp-remote derive its own port.
+ * `off` or `0` disables the preference and lets the system choose a port.
  */
 export function preferredPort(raw = process.env.RDH_OAUTH_PORT) {
   if (raw === undefined || raw === '') {
@@ -40,38 +39,9 @@ export function preferredPort(raw = process.env.RDH_OAUTH_PORT) {
   return port;
 }
 
-/** Build the argv passed to mcp-remote. */
-export function buildProxyArgs({
-  proxyPath,
-  url,
-  port,
-  transport = 'http-only',
-}: {
-  proxyPath: string;
-  url: string;
-  port?: number | null;
-  transport?: string;
-}): string[] {
-  const endpoint = resolveConfig({ RDH_MCP_URL: url }).endpoint;
-  const args = [proxyPath, endpoint];
-  if (port !== null && port !== undefined) {
-    args.push(String(port));
-  }
-  args.push(
-    '--transport',
-    transport,
-    '--static-oauth-client-metadata',
-    JSON.stringify({ client_name: 'Remote Device Hub for DeepSeek Harness' }),
-  );
-  if (new URL(endpoint).protocol === 'http:') {
-    args.push('--allow-http');
-  }
-  return args;
-}
-
 /**
- * Test whether the loopback port mcp-remote binds can be used on this host.
- * mcp-remote's callback server listens on 127.0.0.1, so the check must use the
+ * Test whether the loopback callback port can be used on this host.
+ * The callback server listens on 127.0.0.1, so the check must use the
  * same address; binding all interfaces can succeed on systems where IPv6 and
  * IPv4 are separate sockets and would mask an IPv4 conflict.
  */
@@ -101,19 +71,20 @@ export async function isPortFree(port: number): Promise<boolean> {
   });
 }
 
-function log(message: string): void {
-  process.stderr.write(`[remote-device-hub] ${message}\n`);
-}
+const STORAGE_DEADLINE_MS = 30_000;
 
 async function main() {
-  let proxyPath;
-  try {
-    proxyPath = resolveProxy();
-  } catch {
-    log('The secure MCP bridge is missing. Reinstall the dsh-remote-device-hub bundle.');
-    process.exitCode = 1;
-    return;
-  }
+  // Native backend and third-party errors can embed credential values. Never dump them.
+  const stopSafely = (error: unknown) => {
+    log(
+      error instanceof SecureStorageError
+        ? STORAGE_ERROR
+        : 'The MCP bridge stopped unexpectedly. Restart Remote Device Hub.',
+    );
+    process.exit(1);
+  };
+  process.on('uncaughtException', stopSafely);
+  process.on('unhandledRejection', stopSafely);
 
   let port;
   let config;
@@ -125,40 +96,30 @@ async function main() {
     process.exitCode = 1;
     return;
   }
-
-  if (port !== null && !(await isPortFree(port))) {
-    log(
-      `OAuth callback port ${port} is busy; letting mcp-remote choose its derived port for this run.`,
-    );
-    port = null;
+  // A locked keyring can leave the backend call waiting on a prompt nobody
+  // sees. Stop with a clear message instead of hanging the client.
+  const unavailable = setTimeout(() => {
+    log(STORAGE_ERROR);
+    // A normal exit waits for the stuck backend call; end the process outright.
+    process.kill(process.pid, 'SIGKILL');
+  }, STORAGE_DEADLINE_MS);
+  try {
+    await secureStore.ready();
+  } catch {
+    log(STORAGE_ERROR);
+    process.exit(1);
+  } finally {
+    clearTimeout(unavailable);
   }
 
-  const url = config.endpoint;
-  const preloadPath = fileURLToPath(new URL('./oauth-fetch.mjs', import.meta.url));
-  const args = ['--import', preloadPath, ...buildProxyArgs({ proxyPath, url, port })];
-  const child = spawn(process.execPath, args, { stdio: 'inherit', env: process.env });
-
-  const forward = (signal: NodeJS.Signals) => {
-    if (!child.killed) {
-      child.kill(signal);
-    }
-  };
-  const signals: NodeJS.Signals[] = ['SIGINT', 'SIGTERM', 'SIGHUP'];
-  for (const signal of signals) {
-    process.on(signal, () => forward(signal));
+  const fetchFn = wrap(globalThis.fetch.bind(globalThis), config);
+  const auth = new BridgeAuth({ endpoint: config.endpoint, store: secureStore, port, fetchFn });
+  for (const signal of ['SIGINT', 'SIGTERM', 'SIGHUP'] as const) {
+    process.on(signal, () => process.exit(0));
   }
-
-  child.once('error', () => {
-    log('Could not start the secure MCP bridge. Check the installation.');
-    process.exitCode = 1;
-  });
-  child.once('exit', (code, signal) => {
-    if (signal) {
-      process.exitCode = 1;
-      return;
-    }
-    process.exitCode = code ?? 1;
-  });
+  process.exitCode = await runBridge({ endpoint: config.endpoint, auth, fetchFn });
+  // Nothing else should keep the process alive once the client is gone.
+  process.exit();
 }
 
 /**
