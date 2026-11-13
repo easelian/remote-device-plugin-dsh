@@ -1,54 +1,67 @@
-# Failure recovery and account allowance
+# Operation receipts and recovery
 
-For an authorized change, if the device advertises operation receipts and the
-host exposes `prepare_operation`, reserve an ID for a supported operation and
-pass the returned `operation_id` to that change. Never invent an ID or use an
-expired one. This is optional when the device or routing does not support it.
-After a timeout or disconnect, use `get_operation_status` with the original
-device and operation ID, or inspect `list_operations` when the returned ID was
-lost. Correlate a listed receipt before attributing it to the attempted change.
-These queries do not repeat the operation, and their summaries may not contain
-file content or process output.
+On devices advertising `operation_receipts`, the Hub records a receipt for a
+supported change whether or not an ID was reserved. Reserving one first with
+`prepare_operation` means the ID is already known if the execution response is
+lost. Without it, recovery depends on an ID returned with the result or error,
+or on correlating a receipt from `list_operations`.
 
-For an ordinary device call without an operation receipt, use `get_call_status`
-with its `support_id`, or inspect `list_calls` when that ID was lost, if those
-tools are available. These queries also do not execute the original call.
-Device-scoped call history does not cover `list_devices`; use its support ID in
-the account activity view instead. An `unknown` outcome remains uncertain:
-inspect the actual device state before considering a new change.
+Reserve an ID when the task needs to establish what the call itself did, not
+only what state exists now: `start_process`, `write_process_stdin`,
+`terminate_process`, `browser_open`, `browser_act`, `browser_control`, and a
+file change that triggers further effects or whose final state cannot be read
+back reliably. For an ordinary file change where only the final content matters
+and it is verified by reading back, the reservation may be skipped. Skipping it
+never permits a blind retry: after a lost response, use the receipt, call
+history, or state inspection first, and do not repeat a change whose outcome is
+uncertain.
 
-- Authentication failure: ask the user to reconnect through the host. In
-  DeepSeek Harness the bundle starts browser sign-in through its OAuth bridge;
-  if no browser opens, ask the user to restart the plugin and check the Harness
-  logs. Do not request or replay OAuth credentials manually.
-- Device missing, offline, or revoked: refresh `list_devices`; explain the
-  observed state. Do not switch devices or attempt another identity.
-- Disabled feature or permission failure: explain the restriction. Do not use
-  an alternate tool to bypass it. Changing permissions requires a separate,
-  explicit user request and the device owner's supported management flow.
-- Timeout or disconnect after a write or command: the operation may already
-  have executed. Inspect the relevant file or known job before considering a
-  retry. If its outcome cannot be established, state that it is unknown and
-  ask before another potentially duplicate side effect.
-- Busy service: a read may be retried with bounded backoff. A write requires
-  evidence that it was not dispatched, or state inspection as described above.
-- Connection failure on a read-only call: wait briefly and retry at most once
-  using the same device, path, and bounded arguments. If it still fails, report
-  the failure and stop; do not fabricate content or switch to Shell.
-- Read argument validation failure: check the tool schema and correct the
-  rejected field once. For `read_file`, omit `length` or use 1..65536 bytes;
-  do not repeat an invalid 1048576-byte length. This permits a corrected read,
-  not retrying a potentially dispatched write or command.
-- Stale file hash: reread, reconcile the newer content, and preserve other edits.
-- Unsupported extended tool: use a supported equivalent only if it preserves
-  the same permissions and semantics. Do not substitute shell for a denied read
-  or write.
-- `payment_required`: this error code means the current account
-  allowance does not permit the operation. Stop retrying. `get_billing_status`
-  is free and may report existing entitlement and remaining allowance. Explain
-  those facts without promoting upgrades, presenting subscription plans,
-  initiating checkout, or following a `payment_url` from an older server.
+1. Call `prepare_operation` with `device_id` and `operation`: the target tool's
+   exact name from the current enum, without a host-added namespace. Read-only
+   tools are not supported. Preparation does not execute the change or grant permission.
+2. Pass the returned `operation_id` unchanged to that tool on the same device,
+   along with its required arguments. For example, `start_process` also needs
+   the selected `root` and authorized `command`. Never invent an ID. The returned
+   `expires_at` gives the receipt's expiry; do not derive it from device settings.
+3. If the execution response is lost or times out, call `get_operation_status`
+   with the original device and operation ID. If the ID was lost, correlate a
+   receipt from `list_operations`. These queries return stored state and bounded
+   summaries, may omit output or content, and do not execute the change again.
 
-Do not promise a refund or a free retry: a dispatched operation with an unknown
-outcome may consume allowance. Do not fabricate results when authentication,
-quota, availability, or a permission boundary prevents execution.
+Apply the receipt flow only when both the tool and device support it. Lack of
+receipt support is distinct from a rejected preparation request: do not drop
+the ID or bypass a denial to force a change through.
+
+For a device call without an operation receipt, use `get_call_status` with the
+returned `support_id`, or `list_calls` if it was lost. Device call history does
+not cover `list_devices`; refer to account activity for that support ID.
+An `unknown` outcome remains uncertain. Inspect the relevant file, known job,
+or browser session before considering a new action. If uncertainty remains,
+explain it and ask before a potentially duplicate side effect.
+
+- Authentication failure: sign in again the way the connection step in
+  `SKILL.md` describes for this host. Do not read credentials or replay refresh
+  tokens. A lost rotation response may require signing in again.
+- Missing/offline device or revoked access: refresh `list_devices` and report
+  the result. Do not switch identities or devices as a workaround.
+- Permission or capability failure: explain the returned restriction. Do not
+  bypass it with shell or another tool. Permission changes require an explicit
+  request and the owner's supported management flow.
+- Read-only connection failure: retry at most once after a short delay with
+  the same bounded arguments and target; otherwise report the failure.
+- Schema validation rejected before dispatch: inspect the current schema and
+  correct missing or misnamed fields once. Correct a change only when the
+  rejection establishes that it was not dispatched; an ambiguous error or
+  timeout requires recovery first.
+- Stale file hash or existing-file conflict: reread and reconcile with current
+  content. Never retry an overwrite using an empty `expected_sha256`.
+- Busy service or unknown write outcome: retry a change only with evidence it
+  was not dispatched, or after state inspection and authorization for the new
+  action. Never replay browser submissions or one-use upload grants.
+- `payment_required`: stop retrying. `get_billing_status` can report entitlement
+  and remaining allowance. Explain observed values without initiating checkout,
+  promoting plans, following payment links, or promising a refund/free retry.
+
+Report authentication, host loading, routing, and device errors separately.
+Do not interpret an empty device list as a connection failure or a missing
+browser tool as an Agent crash.

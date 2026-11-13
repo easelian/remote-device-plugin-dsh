@@ -72,6 +72,10 @@ test('the bundled skill has valid frontmatter', async () => {
   assert.ok(match, 'frontmatter is present');
   assert.match(match[1], /^name: remote-device-hub$/mu);
   assert.match(match[1], /^description: .{40,}$/mu);
+  // The Harness lists the skill by the description registered in index.js.
+  // It must be the one in SKILL.md, or the model selects on different text.
+  const description = /^description: (.+)$/mu.exec(match[1])[1];
+  assert.ok((await read('../index.js')).includes(description), 'registered description differs');
   for (const reference of ['files.md', 'processes.md', 'recovery.md']) {
     await stat(new URL(`../skills/remote-device-hub/references/${reference}`, import.meta.url));
   }

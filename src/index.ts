@@ -28,7 +28,7 @@ const SKILL_PATH = fileURLToPath(new URL('./SKILL.md', SKILL_DIRECTORY));
 const RESOURCE_BASE = { kind: 'directory', path: fileURLToPath(SKILL_DIRECTORY) };
 const INVOCATION = { modelInvocable: true, userInvocable: true };
 const DESCRIPTION =
-  "Manage the user's paired remote devices through Remote Device Hub (RDH) MCP tools. Use for which devices are online, remote device status, bounded file reads and edits, remote commands, and Agent-managed jobs. Use when the user refers to RDH, Remote Device Hub, or a remote or paired device. Start with `list_devices`; change a device only after the user identifies the intended device and task.";
+  'Operate paired Linux, macOS, and Windows devices through Remote Device Hub (RDH) MCP tools. Use for remote device status, files, commands, managed jobs, and supported browser tasks. Use when the user refers to RDH, a remote or paired device, or which devices are online. Start with `list_devices`. Not for unrelated local workspace operations.';
 const BUNDLED_SKILL_RANK = 600;
 
 interface RowConfig {
