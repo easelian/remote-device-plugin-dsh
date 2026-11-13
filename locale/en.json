@@ -1,6 +1,6 @@
 {
   "meta": {
     "title": "Remote Device Hub",
-    "description": "Use authorized devices through Remote Device Hub MCP. Tool approvals are configurable in profiles with an approval channel."
+    "description": "Remote Device Hub (RDH) lets DeepSeek Harness work securely on your private machines. Encrypted, no SSH, no open ports, any network. Tool approvals are configurable in profiles with an approval channel."
   }
 }
