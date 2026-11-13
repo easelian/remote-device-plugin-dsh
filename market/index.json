@@ -28,8 +28,8 @@
         "zh": "Remote Device Hub"
       },
       "description": {
-        "en": "Use authorized devices through Remote Device Hub MCP. Tool approvals are configurable in profiles with an approval channel.",
-        "zh": "通过 Remote Device Hub MCP 使用已授权的设备。当前配置有审批通道时，可设置哪些操作需要批准。"
+        "en": "Remote Device Hub (RDH) lets DeepSeek Harness work securely on your private machines. Encrypted, no SSH, no open ports, any network. Tool approvals are configurable in profiles with an approval channel.",
+        "zh": "Remote Device Hub（RDH）让 DeepSeek Harness 安全地在你的私有设备上工作。全程加密，无需 SSH，无需开放端口，任何网络都可用。当前配置有审批通道时，可设置哪些操作需要批准。"
       },
       "icon": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNTYiIGhlaWdodD0iMjU2IiB2aWV3Qm94PSIwIDAgMjU2IDI1NiIgcm9sZT0iaW1nIiBhcmlhLWxhYmVsbGVkYnk9InRpdGxlIj4KICA8dGl0bGUgaWQ9InRpdGxlIj5SZW1vdGUgRGV2aWNlIEh1YjwvdGl0bGU+CiAgPHBhdGggaWQ9ImRldmljZSIgZD0iTTE2NiA0MEg4MmE0MiA0MiAwIDAgMC00MiA0MnY5MmE0MiA0MiAwIDAgMCA0MiA0Mmg5MmE0MiA0MiAwIDAgMCA0Mi00MlY5NiIKICAgICAgICBmaWxsPSJub25lIiBzdHJva2U9IiMwQTg0RkYiIHN0cm9rZS13aWR0aD0iMjYiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPgogIDxnIGlkPSJjb25uZWN0aW9uIiBmaWxsPSIjMEE4NEZGIj4KICAgIDxwYXRoIGlkPSJyZWFjaCIgZD0iTTEyOCAxMzAgMjA4IDUwIiBmaWxsPSJub25lIiBzdHJva2U9IiMwQTg0RkYiIHN0cm9rZS13aWR0aD0iMjYiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPgogICAgPGNpcmNsZSBpZD0iaHViIiBjeD0iMTI4IiBjeT0iMTMwIiByPSIzMSIvPgogIDwvZz4KPC9zdmc+Cg==",
       "author": "Easelian",

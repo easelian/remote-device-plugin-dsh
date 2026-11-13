@@ -156,8 +156,8 @@ async function main() {
                 name: pkg.name,
                 title: { en: 'Remote Device Hub', zh: 'Remote Device Hub' },
                 description: {
-                    en: 'Use authorized devices through Remote Device Hub MCP. Tool approvals are configurable in profiles with an approval channel.',
-                    zh: '通过 Remote Device Hub MCP 使用已授权的设备。当前配置有审批通道时，可设置哪些操作需要批准。',
+                    en: 'Remote Device Hub (RDH) lets DeepSeek Harness work securely on your private machines. Encrypted, no SSH, no open ports, any network. Tool approvals are configurable in profiles with an approval channel.',
+                    zh: 'Remote Device Hub（RDH）让 DeepSeek Harness 安全地在你的私有设备上工作。全程加密，无需 SSH，无需开放端口，任何网络都可用。当前配置有审批通道时，可设置哪些操作需要批准。',
                 },
                 icon,
                 author: pkg.author,
