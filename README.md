@@ -15,7 +15,7 @@ through [Remote Device Hub by Easelian](https://rdh.easelian.com). It contribute
 It is the DSH counterpart of the VS Code and Codex Remote Device Hub plugins.
 No system Node.js is required: the bridge runs on the DSH runtime itself.
 
-See [RDH terminology and service responsibilities](docs/terminology.md) for the shared product, Agent, authorization and execution concepts.
+See [RDH terminology](docs/terminology.md) for the shared product, Agent, authorization and execution concepts.
 
 ## Requirements
 
@@ -303,7 +303,7 @@ updates, OAuth routing/fallback, the skill provider, and launcher behavior.
 
 ## Brand assets
 
-The plugin and market index use the [Remote Device Hub universal product icon](https://github.com/easelian/brand/blob/main/products/remote-device-hub/icons/remote-device-hub.svg). Its fixed charcoal badge and off-white desktop display, lock, and two-tooth key support light and dark surfaces with one icon field. The SVG is bundled as `assets/icon.svg`; Easelian is the publisher.
+The plugin and market index use the [Remote Device Hub universal product icon](assets/icon.svg). Its fixed charcoal badge and off-white desktop display, lock, and two-tooth key support light and dark surfaces with one icon field. The SVG is bundled as `assets/icon.svg`; Easelian is the publisher.
 
 ## License
 

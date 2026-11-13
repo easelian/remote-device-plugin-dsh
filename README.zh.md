@@ -14,7 +14,7 @@ Remote Device Hub 连接你已授权的设备。它提供：
 它是 VS Code 和 Codex 版 Remote Device Hub 插件的 DSH 对应实现。运行时不需要
 系统安装 Node.js，桥接进程直接使用 DSH 自身的运行时。
 
-共享概念见[RDH 统一术语](docs/terminology.md)，中文定义见 [Server 术语表](https://github.com/easelian/remote-device-server/blob/main/docs/terminology.md)。
+共享概念见[RDH 统一术语](docs/terminology.md)。
 
 ## 前置条件
 
@@ -169,8 +169,7 @@ get_operation_status, list_operations, read_process, list_processes
 | `RDH_PUBLIC_ORIGIN` | `RDH_MCP_URL` 的 origin | OAuth 公开 origin；只有与 MCP 入口不同且已确认属于同一 Hub 时才需设置。 |
 
 发布默认值位于生成文件 [src/bin/deployment-defaults.mts](src/bin/deployment-defaults.mts)，
-由 Server 仓库的 `tools/ops/sync-deployment.py` 根据
-`tools/ops/config/config.json` 生成。
+由 Easelian 的发布工具生成，请勿手工修改。
 自建 Hub 通常只需设置 `RDH_MCP_URL`；桥接会从该 MCP 入口发现认证服务，
 不会退回官方域名。
 上面的 `hub.example.test` 是示例，使用前应替换成自己的地址。
@@ -270,7 +269,7 @@ npm run pack:check
 
 ## 品牌资源
 
-插件和市场索引均使用 [Remote Device Hub 通用产品图标](https://github.com/easelian/brand/blob/main/products/remote-device-hub/icons/remote-device-hub.svg)。图标由深灰底板和浅白色显示器、锁与双齿短钥匙组成，只使用两种纯色；显示器右上方留有开口。浅色和深色界面使用同一张图标，无需平台提供两套图标字段。随包 SVG 为 `assets/icon.svg`，发布者为 Easelian。
+插件和市场索引均使用 [Remote Device Hub 通用产品图标](assets/icon.svg)。图标由深灰底板和浅白色显示器、锁与双齿短钥匙组成，只使用两种纯色；显示器右上方留有开口。浅色和深色界面使用同一张图标，无需平台提供两套图标字段。随包 SVG 为 `assets/icon.svg`，发布者为 Easelian。
 
 ## 许可证
 
